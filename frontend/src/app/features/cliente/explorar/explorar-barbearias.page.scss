@@ -25,6 +25,17 @@ ion-searchbar {
     color: var(--ion-color-dark);
 }
 
+.location-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(var(--ion-color-warning-rgb), 0.1);
+    border-bottom: 1px solid var(--ion-color-warning);
+    font-size: 0.8rem;
+    color: var(--ion-color-warning-shade);
+}
+
 .view-toggle {
     padding: 12px 16px;
 }
@@ -90,26 +101,28 @@ ion-searchbar {
     margin-bottom: 16px;
 }
 
-.barbearias-list {
+// ========== Barbeiros List ==========
+
+.barbeiros-list {
     padding: 0 8px 16px 8px;
 }
 
-.barbearia-card {
+.barbeiro-card {
     display: flex;
     align-items: flex-start;
     gap: 12px;
 }
 
-.barbearia-foto {
+.barbeiro-foto {
     position: relative;
-    width: 90px;
-    height: 90px;
-    border-radius: 12px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
 }
 
-.barbearia-foto img {
+.barbeiro-foto img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -125,56 +138,58 @@ ion-searchbar {
 }
 
 .foto-placeholder ion-icon {
-    font-size: 36px;
+    font-size: 32px;
     color: var(--ion-color-medium);
 }
 
-.status-badge {
+.vinculo-badge {
     position: absolute;
-    bottom: 4px;
-    left: 4px;
-    font-size: 0.6rem;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    white-space: nowrap;
 }
 
-.barbearia-info {
+.barbeiro-info {
     flex: 1;
     min-width: 0;
 }
 
-.barbearia-header {
+.barbeiro-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
 }
 
-.barbearia-header h3 {
+.barbeiro-header h3 {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
     color: var(--ion-color-dark);
 }
 
-.barbearia-header ion-button {
+.barbeiro-header ion-button {
     --padding-start: 4px;
     --padding-end: 4px;
     margin: -4px -4px 0 0;
 }
 
-.endereco {
+.barbearia-nome {
     display: flex;
     align-items: center;
     gap: 4px;
     margin: 4px 0;
     font-size: 0.8rem;
-    color: var(--ion-color-medium);
+    color: var(--ion-color-tertiary);
 }
 
-.endereco ion-icon {
+.barbearia-nome ion-icon {
     font-size: 14px;
     flex-shrink: 0;
 }
 
-.barbearia-meta {
+.barbeiro-meta {
     display: flex;
     gap: 16px;
     margin: 8px 0;

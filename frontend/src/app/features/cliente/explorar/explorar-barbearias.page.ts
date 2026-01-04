@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
@@ -11,24 +11,18 @@ import { addIcons } from 'ionicons';
 import {
     locationOutline, starOutline, heartOutline, heart,
     mapOutline, listOutline, navigateOutline, storefrontOutline,
-    chevronForwardOutline, notificationsOutline
+    chevronForwardOutline, notificationsOutline, personOutline
 } from 'ionicons/icons';
+import { Geolocation } from '@capacitor/geolocation';
+import { BarbeiroService } from '@core/services/barbeiro.service';
+import { BarbeiroResumo } from '@core/models/barbeiro.model';
 
 /**
- * Interface para barbearia listada
+ * Card de barbeiro para exibição na lista.
+ * Adaptado do BarbeiroResumo com campos adicionais para UI.
  */
-interface BarbeariaCard {
-    id: string;
-    nome: string;
-    endereco: string;
-    distanciaKm: number;
-    avaliacaoMedia: number;
-    totalAvaliacoes: number;
-    fotoUrl?: string;
-    aberto: boolean;
-    horarioFechamento?: string;
-    servicoDestaque?: string;
-    precoMinimo?: number;
+interface BarbeiroCard extends BarbeiroResumo {
+    distanciaKm?: number;
     favorito: boolean;
 }
 
@@ -39,13 +33,14 @@ type TipoVisualizacao = 'lista' | 'mapa';
 
 /**
  * Página principal do Cliente.
- * Lista de barbearias próximas com busca e filtros.
+ * Lista de barbeiros próximos com busca e filtros.
+ * Conecta com dados reais do backend via BarbeiroService.
  */
 @Component({
     selector: 'app-explorar-barbearias',
     standalone: true,
     imports: [
-        DecimalPipe, FormsModule,
+        DecimalPipe, SlicePipe, FormsModule,
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
         IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
         IonRefresherContent, IonButtons, IonChip, IonSearchbar,
@@ -56,20 +51,30 @@ type TipoVisualizacao = 'lista' | 'mapa';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExplorarBarbeariasPage implements OnInit {
+    private readonly barbeiroService = inject(BarbeiroService);
+
     // Estado
     readonly carregando = signal(false);
-    readonly barbearias = signal<BarbeariaCard[]>([]);
+    readonly barbeiros = signal<BarbeiroCard[]>([]);
     readonly localizacaoAtual = signal('Detectando localização...');
+    readonly erroLocalizacao = signal<string | null>(null);
+
     termoBusca = '';
     tipoVisualizacao: TipoVisualizacao = 'lista';
 
+    // Coordenadas atuais
+    private latitudeAtual = -23.5505; // Fallback: São Paulo Centro
+    private longitudeAtual = -46.6333;
+    private raioKm = 10;
+
     // Computed
-    readonly barbeariasFiltradas = computed(() => {
+    readonly barbeirosFiltrados = computed(() => {
         const termo = this.termoBusca.toLowerCase();
-        if (!termo) return this.barbearias();
-        return this.barbearias().filter(b =>
+        if (!termo) return this.barbeiros();
+        return this.barbeiros().filter(b =>
             b.nome.toLowerCase().includes(termo) ||
-            b.endereco.toLowerCase().includes(termo)
+            (b.especialidades && b.especialidades.toLowerCase().includes(termo)) ||
+            (b.barbeariaNome && b.barbeariaNome.toLowerCase().includes(termo))
         );
     });
 
@@ -77,127 +82,164 @@ export class ExplorarBarbeariasPage implements OnInit {
         addIcons({
             locationOutline, starOutline, heartOutline, heart,
             mapOutline, listOutline, navigateOutline, storefrontOutline,
-            chevronForwardOutline, notificationsOutline
+            chevronForwardOutline, notificationsOutline, personOutline
         });
     }
 
-    ngOnInit(): void {
-        this.obterLocalizacao();
-        this.carregarBarbearias();
+    async ngOnInit(): Promise<void> {
+        await this.obterLocalizacaoReal();
+        this.carregarBarbeiros();
     }
 
-    obterLocalizacao(): void {
-        // TODO: Integrar com Geolocation API do Capacitor
-        setTimeout(() => {
-            this.localizacaoAtual.set('Centro, São Paulo - SP');
-        }, 1000);
+    /**
+     * Obtém localização real do dispositivo via Capacitor Geolocation.
+     * Fallback para São Paulo Centro se não conseguir.
+     */
+    private async obterLocalizacaoReal(): Promise<void> {
+        try {
+            // Verifica permissão primeiro
+            const permissao = await Geolocation.checkPermissions();
+
+            if (permissao.location === 'denied') {
+                // Solicita permissão
+                const novaPermissao = await Geolocation.requestPermissions();
+                if (novaPermissao.location === 'denied') {
+                    this.erroLocalizacao.set('Permissão de localização negada');
+                    this.localizacaoAtual.set('Localização manual necessária');
+                    return;
+                }
+            }
+
+            // Obtém posição atual
+            const position = await Geolocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+
+            this.latitudeAtual = position.coords.latitude;
+            this.longitudeAtual = position.coords.longitude;
+            this.localizacaoAtual.set('Sua localização');
+            this.erroLocalizacao.set(null);
+
+        } catch (error) {
+            console.warn('Erro ao obter localização:', error);
+            // Fallback para São Paulo Centro
+            this.latitudeAtual = -23.5505;
+            this.longitudeAtual = -46.6333;
+            this.erroLocalizacao.set('Não foi possível obter sua localização');
+            this.localizacaoAtual.set('São Paulo - SP (padrão)');
+        }
     }
 
-    carregarBarbearias(): void {
+    /**
+     * Carrega barbeiros próximos do backend.
+     */
+    carregarBarbeiros(): void {
         this.carregando.set(true);
 
-        // TODO: Integrar com BarbeariaService real
-        setTimeout(() => {
-            this.barbearias.set([
-                {
-                    id: '1',
-                    nome: 'Barbearia Vintage',
-                    endereco: 'Rua Augusta, 1500 - Consolação',
-                    distanciaKm: 0.8,
-                    avaliacaoMedia: 4.8,
-                    totalAvaliacoes: 234,
-                    fotoUrl: undefined,
-                    aberto: true,
-                    horarioFechamento: '20:00',
-                    servicoDestaque: 'Corte Degradê',
-                    precoMinimo: 45,
-                    favorito: true
+        this.barbeiroService.buscarProximos(this.latitudeAtual, this.longitudeAtual, this.raioKm)
+            .subscribe({
+                next: (barbeiros) => {
+                    // Converte para BarbeiroCard adicionando campos de UI
+                    const cards: BarbeiroCard[] = barbeiros.map(b => ({
+                        ...b,
+                        distanciaKm: this.calcularDistancia(
+                            this.latitudeAtual, this.longitudeAtual,
+                            b.latitude, b.longitude
+                        ),
+                        favorito: false // TODO: Integrar com FavoritosService
+                    }));
+
+                    // Ordena por distância
+                    cards.sort((a, b) => (a.distanciaKm ?? 0) - (b.distanciaKm ?? 0));
+
+                    this.barbeiros.set(cards);
+                    this.carregando.set(false);
                 },
-                {
-                    id: '2',
-                    nome: 'The Barber Shop',
-                    endereco: 'Av. Paulista, 1000 - Bela Vista',
-                    distanciaKm: 1.2,
-                    avaliacaoMedia: 4.6,
-                    totalAvaliacoes: 189,
-                    fotoUrl: undefined,
-                    aberto: true,
-                    servicoDestaque: 'Barba Completa',
-                    precoMinimo: 35,
-                    favorito: false
-                },
-                {
-                    id: '3',
-                    nome: 'Classic Cuts',
-                    endereco: 'Rua Oscar Freire, 500 - Jardins',
-                    distanciaKm: 1.8,
-                    avaliacaoMedia: 4.9,
-                    totalAvaliacoes: 412,
-                    fotoUrl: undefined,
-                    aberto: false,
-                    servicoDestaque: 'Corte Premium',
-                    precoMinimo: 80,
-                    favorito: false
-                },
-                {
-                    id: '4',
-                    nome: 'Barba Negra',
-                    endereco: 'Rua da Consolação, 2100',
-                    distanciaKm: 2.1,
-                    avaliacaoMedia: 4.5,
-                    totalAvaliacoes: 156,
-                    fotoUrl: undefined,
-                    aberto: true,
-                    servicoDestaque: 'Corte + Barba',
-                    precoMinimo: 55,
-                    favorito: true
-                },
-                {
-                    id: '5',
-                    nome: 'Kings Barbershop',
-                    endereco: 'Av. Rebouças, 800 - Pinheiros',
-                    distanciaKm: 2.5,
-                    avaliacaoMedia: 4.7,
-                    totalAvaliacoes: 298,
-                    fotoUrl: undefined,
-                    aberto: true,
-                    servicoDestaque: 'Relaxamento',
-                    precoMinimo: 120,
-                    favorito: false
+                error: (error) => {
+                    console.error('Erro ao carregar barbeiros:', error);
+                    this.barbeiros.set([]);
+                    this.carregando.set(false);
                 }
-            ]);
-            this.carregando.set(false);
-        }, 800);
+            });
     }
 
+    /**
+     * Calcula distância entre dois pontos usando fórmula de Haversine.
+     */
+    private calcularDistancia(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        if (!lat2 || !lon2) return 0;
+
+        const R = 6371; // Raio da Terra em km
+        const dLat = this.toRad(lat2 - lat1);
+        const dLon = this.toRad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private toRad(deg: number): number {
+        return deg * (Math.PI / 180);
+    }
+
+    /**
+     * Pull-to-refresh handler.
+     */
     handleRefresh(event: CustomEvent): void {
-        this.carregarBarbearias();
+        this.carregarBarbeiros();
+        // Completa o refresher após um delay para melhor UX
         setTimeout(() => {
             (event.target as HTMLIonRefresherElement).complete();
-        }, 1000);
+        }, 500);
     }
 
+    /**
+     * Handler de busca (filtragem local via computed).
+     */
     buscar(): void {
-        // O computed barbeariasFiltradas faz a filtragem
+        // O computed barbeirosFiltrados faz a filtragem automaticamente
     }
 
+    /**
+     * Altera entre visualização lista/mapa.
+     */
     alterarVisualizacao(): void {
-        // Mapa será implementado depois
+        // Mapa será implementado posteriormente
+        if (this.tipoVisualizacao === 'mapa') {
+            console.log('Visualização de mapa ainda não implementada');
+        }
     }
 
-    toggleFavorito(barbearia: BarbeariaCard, event: Event): void {
+    /**
+     * Toggle favorito de um barbeiro.
+     */
+    toggleFavorito(barbeiro: BarbeiroCard, event: Event): void {
         event.stopPropagation();
-        this.barbearias.update(lista =>
-            lista.map(b => b.id === barbearia.id
+        this.barbeiros.update(lista =>
+            lista.map(b => b.id === barbeiro.id
                 ? { ...b, favorito: !b.favorito }
                 : b
             )
         );
-        // TODO: Chamar FavoritoService
+        // TODO: Integrar com FavoritosService para persistir
     }
 
-    abrirBarbearia(barbearia: BarbeariaCard): void {
-        // TODO: Navegar para página de detalhes da barbearia
-        console.log('Abrindo barbearia:', barbearia.id);
+    /**
+     * Abre detalhes do barbeiro.
+     */
+    abrirBarbeiro(barbeiro: BarbeiroCard): void {
+        // TODO: Navegar para página de detalhes do barbeiro
+        console.log('Abrindo barbeiro:', barbeiro.id, barbeiro.nome);
+    }
+
+    /**
+     * Permite alterar localização manualmente.
+     */
+    async alterarLocalizacao(): Promise<void> {
+        // TODO: Implementar modal de seleção de cidade/endereço
+        console.log('Alterar localização - a implementar');
     }
 }
