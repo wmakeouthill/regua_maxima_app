@@ -1,0 +1,186 @@
+/*
+ * Regua Maxima - Tema Barbershop Claro
+ * Design inspirado em barbearias classicas
+ */
+
+:root {
+    /* ============================================
+       TEMA CLARO - BARBERSHOP CLASSICO
+       ============================================ */
+
+    /* Primary - Marrom Barbershop */
+    --ion-color-primary: #5D4037;
+    --ion-color-primary-rgb: 93, 64, 55;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
+    --ion-color-primary-shade: #4E342E;
+    --ion-color-primary-tint: #6D4C41;
+
+    /* Secondary - Dourado Premium */
+    --ion-color-secondary: #C9A227;
+    --ion-color-secondary-rgb: 201, 162, 39;
+    --ion-color-secondary-contrast: #000000;
+    --ion-color-secondary-contrast-rgb: 0, 0, 0;
+    --ion-color-secondary-shade: #B8922A;
+    --ion-color-secondary-tint: #D4B03D;
+
+    /* Tertiary - Preto Classico */
+    --ion-color-tertiary: #212121;
+    --ion-color-tertiary-rgb: 33, 33, 33;
+    --ion-color-tertiary-contrast: #ffffff;
+    --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+    --ion-color-tertiary-shade: #1A1A1A;
+    --ion-color-tertiary-tint: #3D3D3D;
+
+    /* Success - Verde Oliva */
+    --ion-color-success: #558B2F;
+    --ion-color-success-rgb: 85, 139, 47;
+    --ion-color-success-contrast: #ffffff;
+    --ion-color-success-contrast-rgb: 255, 255, 255;
+    --ion-color-success-shade: #4A7728;
+    --ion-color-success-tint: #689F38;
+
+    /* Warning - Laranja Vintage */
+    --ion-color-warning: #E65100;
+    --ion-color-warning-rgb: 230, 81, 0;
+    --ion-color-warning-contrast: #ffffff;
+    --ion-color-warning-contrast-rgb: 255, 255, 255;
+    --ion-color-warning-shade: #CC4700;
+    --ion-color-warning-tint: #EF6C00;
+
+    /* Danger - Vermelho Barbershop */
+    --ion-color-danger: #B71C1C;
+    --ion-color-danger-rgb: 183, 28, 28;
+    --ion-color-danger-contrast: #ffffff;
+    --ion-color-danger-contrast-rgb: 255, 255, 255;
+    --ion-color-danger-shade: #9A1818;
+    --ion-color-danger-tint: #C62828;
+
+    /* Medium */
+    --ion-color-medium: #78909C;
+    --ion-color-medium-rgb: 120, 144, 156;
+    --ion-color-medium-contrast: #000000;
+    --ion-color-medium-contrast-rgb: 0, 0, 0;
+    --ion-color-medium-shade: #607D8B;
+    --ion-color-medium-tint: #90A4AE;
+
+    /* Light - Creme Barbershop */
+    --ion-color-light: #FDF5E6;
+    --ion-color-light-rgb: 253, 245, 230;
+    --ion-color-light-contrast: #000000;
+    --ion-color-light-contrast-rgb: 0, 0, 0;
+    --ion-color-light-shade: #EFE4D3;
+    --ion-color-light-tint: #FFFAF0;
+
+    /* ============================================
+       CORES CUSTOMIZADAS BARBERSHOP
+       ============================================ */
+
+    /* Cor Gold/Dourado para destaques */
+    --ion-color-gold: #C9A227;
+    --ion-color-gold-rgb: 201, 162, 39;
+    --ion-color-gold-contrast: #000000;
+    --ion-color-gold-contrast-rgb: 0, 0, 0;
+    --ion-color-gold-shade: #B8922A;
+    --ion-color-gold-tint: #D4B03D;
+
+    /* Cor Bronze */
+    --ion-color-bronze: #8D6E63;
+    --ion-color-bronze-rgb: 141, 110, 99;
+    --ion-color-bronze-contrast: #ffffff;
+    --ion-color-bronze-contrast-rgb: 255, 255, 255;
+    --ion-color-bronze-shade: #795548;
+    --ion-color-bronze-tint: #A1887F;
+
+    /* ============================================
+       BACKGROUND E TEXTO (TEMA CLARO)
+       ============================================ */
+    --ion-background-color: #FDF5E6;
+    --ion-background-color-rgb: 253, 245, 230;
+    
+    --ion-text-color: #3E2723;
+    --ion-text-color-rgb: 62, 39, 35;
+
+    /* Backgrounds escalonados para cards, itens, etc */
+    --ion-color-step-50: #FAF0DC;
+    --ion-color-step-100: #F5EBD7;
+    --ion-color-step-150: #F0E6D2;
+    --ion-color-step-200: #EBE1CD;
+    --ion-color-step-250: #E6DCC8;
+    --ion-color-step-300: #E1D7C3;
+    --ion-color-step-350: #DCD2BE;
+    --ion-color-step-400: #D7CDB9;
+    --ion-color-step-450: #D2C8B4;
+    --ion-color-step-500: #CDC3AF;
+    --ion-color-step-550: #C8BEAA;
+    --ion-color-step-600: #C3B9A5;
+    --ion-color-step-650: #BEB4A0;
+    --ion-color-step-700: #B9AF9B;
+    --ion-color-step-750: #B4AA96;
+    --ion-color-step-800: #AFA591;
+    --ion-color-step-850: #AAA08C;
+    --ion-color-step-900: #A59B87;
+    --ion-color-step-950: #A09682;
+
+    /* ============================================
+       ELEMENTOS DA UI
+       ============================================ */
+    --ion-item-background: #FFFAF0;
+    --ion-card-background: #FFFAF0;
+    --ion-toolbar-background: #5D4037;
+    --ion-toolbar-color: #ffffff;
+    --ion-tab-bar-background: #FFFAF0;
+    --ion-tab-bar-color: #5D4037;
+    --ion-tab-bar-color-selected: #C9A227;
+
+    /* Bordas e sombras */
+    --border-color: #D7CCC8;
+    --shadow-color: rgba(62, 39, 35, 0.15);
+
+    /* ============================================
+       VARIAVEIS CUSTOMIZADAS DA APP
+       ============================================ */
+    --barbershop-gradient: linear-gradient(135deg, #5D4037 0%, #3E2723 100%);
+    --gold-gradient: linear-gradient(135deg, #C9A227 0%, #8D6E63 100%);
+    --cream-gradient: linear-gradient(180deg, #FDF5E6 0%, #F5EBD7 100%);
+}
+
+/* Classe utilitaria para cor gold */
+.ion-color-gold {
+    --ion-color-base: var(--ion-color-gold);
+    --ion-color-base-rgb: var(--ion-color-gold-rgb);
+    --ion-color-contrast: var(--ion-color-gold-contrast);
+    --ion-color-contrast-rgb: var(--ion-color-gold-contrast-rgb);
+    --ion-color-shade: var(--ion-color-gold-shade);
+    --ion-color-tint: var(--ion-color-gold-tint);
+}
+
+/* Classe utilitaria para cor bronze */
+.ion-color-bronze {
+    --ion-color-base: var(--ion-color-bronze);
+    --ion-color-base-rgb: var(--ion-color-bronze-rgb);
+    --ion-color-contrast: var(--ion-color-bronze-contrast);
+    --ion-color-contrast-rgb: var(--ion-color-bronze-contrast-rgb);
+    --ion-color-shade: var(--ion-color-bronze-shade);
+    --ion-color-tint: var(--ion-color-bronze-tint);
+}
+
+/* ============================================
+   FORCAR TEMA CLARO (Desabilitar dark mode)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Mantem tema claro mesmo com preferencia escura */
+        --ion-background-color: #FDF5E6;
+        --ion-background-color-rgb: 253, 245, 230;
+        --ion-text-color: #3E2723;
+        --ion-text-color-rgb: 62, 39, 35;
+    }
+
+    body {
+        --ion-background-color: #FDF5E6;
+        --ion-background-color-rgb: 253, 245, 230;
+        --ion-text-color: #3E2723;
+        --ion-text-color-rgb: 62, 39, 35;
+    }
+}

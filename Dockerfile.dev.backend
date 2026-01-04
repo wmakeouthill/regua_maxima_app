@@ -1,0 +1,79 @@
+# ================================================
+# Dockerfile para Backend em Desenvolvimento
+# Hot-reload com Spring Boot DevTools
+# Java 21 LTS com Virtual Threads
+# ================================================
+
+FROM eclipse-temurin:21-jdk
+
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copiar pom.xml primeiro para aproveitar cache de dependências
+COPY backend/pom.xml ./pom.xml
+COPY backend/kernel-compartilhado/pom.xml ./kernel-compartilhado/pom.xml
+COPY backend/autenticacao/pom.xml ./autenticacao/pom.xml
+COPY backend/sistema-orquestrador/pom.xml ./sistema-orquestrador/pom.xml
+
+# Download de dependências (cached)
+RUN mvn dependency:go-offline -B || true
+
+# Copiar código fonte
+COPY backend/ .
+
+# Porta da aplicação + debug
+EXPOSE 8080 5005
+
+# Script para hot-reload automático
+# Monitora mudanças usando polling (compatível com Windows + Docker volumes)
+COPY <<EOF /app/watch-and-run.sh
+#!/bin/sh
+# Script para monitorar mudanças e recompilar automaticamente com DevTools
+
+# Compilar uma vez antes de iniciar
+echo "Compilando projeto inicial..."
+mvn install -DskipTests -q
+
+# Criar trigger file inicial e arquivo de controle
+touch /app/sistema-orquestrador/.reloadtrigger
+touch /tmp/last_check
+
+# Iniciar Spring Boot em background
+echo "Iniciando Spring Boot com DevTools..."
+mvn spring-boot:run -pl sistema-orquestrador \\
+  -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -XX:+UseZGC -XX:+ZGenerational' \\
+  -Dspring-boot.run.profiles=dev \\
+  -Dspring-boot.run.fork=false &
+SPRING_PID=\$!
+
+# Função para verificar e recompilar se necessário
+check_and_recompile() {
+  # Verificar se há arquivos .java modificados desde a última verificação
+  if find /app -name "*.java" -type f -newer /tmp/last_check 2>/dev/null | grep -q .; then
+    echo "[$(date +'%H:%M:%S')] Mudanças detectadas, recompilando..."
+    mvn compile -DskipTests -q
+    if [ \$? -eq 0 ]; then
+      # Tocar o trigger file para forçar restart do DevTools
+      touch /app/sistema-orquestrador/.reloadtrigger
+      echo "[$(date +'%H:%M:%S')] Recompilação concluída, DevTools irá reiniciar..."
+    fi
+    touch /tmp/last_check
+  fi
+}
+
+# Monitorar mudanças nos arquivos Java (polling a cada 2 segundos)
+echo "Monitorando mudanças nos arquivos Java (polling a cada 2s)..."
+while kill -0 \$SPRING_PID 2>/dev/null; do
+  check_and_recompile
+  sleep 2
+done
+
+echo "Spring Boot parou."
+EOF
+
+RUN chmod +x /app/watch-and-run.sh
+
+# Comando para rodar com hot-reload automático
+CMD ["/app/watch-and-run.sh"]

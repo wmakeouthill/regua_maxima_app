@@ -1,0 +1,60 @@
+# ================================================
+# Régua Máxima - .gitignore
+# ================================================
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Build
+target/
+build/
+dist/
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (NÃO COMMITAR!)
+**/application-secrets.yml
+**/application-secrets.properties
+**/*.secrets.yml
+**/*.secrets.properties
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Angular
+.angular/
+www/
+
+# Android
+*.apk
+*.aab
+*.keystore
+local.properties
+
+# Environment
+.env
+.env.local
+.env.*.local
+# Mantém o exemplo para documentação
+!.env.example
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp

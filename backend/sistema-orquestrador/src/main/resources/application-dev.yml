@@ -1,0 +1,30 @@
+# ================================================
+# Régua Máxima - Perfil de Desenvolvimento
+# ================================================
+
+spring:
+  # DevTools - Configuração para hot-reload em Docker
+  devtools:
+    restart:
+      enabled: true
+      # Trigger file para forçar restart quando arquivos mudarem
+      trigger-file: .reloadtrigger
+      # Excluir apenas arquivos que não precisam de restart
+      exclude: static/**,public/**,templates/**,META-INF/maven/**,META-INF/resources/**
+      # Polling para detectar mudanças em volumes Docker (Windows)
+      additional-paths: /app
+    livereload:
+      enabled: true
+      port: 35729
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    com.reguamaxima: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.boot.devtools: DEBUG

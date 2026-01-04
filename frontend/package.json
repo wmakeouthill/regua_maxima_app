@@ -1,0 +1,63 @@
+{
+  "name": "regua-maxima-frontend",
+  "version": "1.0.0",
+  "description": "Régua Máxima - Frontend Angular + Ionic + Capacitor",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:host": "ng serve --host 0.0.0.0 --disable-host-check",
+    "build": "ng build",
+    "build:prod": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "ionic:serve": "ionic serve",
+    "ionic:build": "ionic build",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "cap:run:android": "npx cap run android",
+    "cap:run:android:live": "NODE_ENV=development npx cap run android --livereload --external",
+    "android:dev": "npm run build && npm run cap:sync && npm run cap:run:android",
+    "android:studio": "npm run build && npm run cap:sync && npm run cap:android"
+  },
+  "dependencies": {
+    "@angular/animations": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/compiler": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0",
+    "@angular/platform-browser-dynamic": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/network": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
+    "@ionic/angular": "^8.0.0",
+    "ionicons": "^7.4.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.6.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.0.0",
+    "@angular/cli": "^20.0.0",
+    "@angular/compiler-cli": "^20.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@ionic/angular-toolkit": "^12.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.8.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

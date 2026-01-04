@@ -1,0 +1,27 @@
+# ================================================
+# Dockerfile para Frontend em Desenvolvimento
+# Hot-reload com ng serve
+# ================================================
+
+FROM node:22-alpine
+
+# Instalar Ionic CLI e Angular CLI globalmente
+RUN npm install -g @ionic/cli @angular/cli
+
+WORKDIR /app/frontend
+
+# Copiar package.json primeiro para cache de dependências
+COPY frontend/package*.json ./
+
+# Instalar dependências
+RUN npm ci
+
+# Porta do ng serve
+EXPOSE 4200
+
+# ================================================
+# Comando para rodar Angular com hot-reload
+# --host 0.0.0.0 permite acesso de fora do container
+# --poll para detectar mudanças no Windows (volumes)
+# ================================================
+CMD ["ng", "serve", "--host=0.0.0.0", "--port=4200", "--poll=500", "--disable-host-check"]

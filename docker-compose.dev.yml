@@ -1,0 +1,188 @@
+services:
+  # ================================================
+  # MySQL para desenvolvimento
+  # ================================================
+  mysql-dev:
+    image: mysql:8.0
+    container_name: regua-maxima-mysql-dev
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-dev_password}
+      - MYSQL_DATABASE=${DB_NAME:-regua_maxima}
+      - MYSQL_USER=${DB_USERNAME:-regua_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-dev_password}
+    volumes:
+      - regua_maxima_mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD:-dev_password}",
+          "--silent",
+        ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 15s
+    restart: unless-stopped
+
+  # ================================================
+  # Backend Spring Boot com hot-reload
+  # ================================================
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev.backend
+    container_name: regua-maxima-backend-dev
+    ports:
+      - "8080:8080"
+      - "5005:5005" # Debug remoto Java
+    environment:
+      - DB_HOST=mysql-dev
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-regua_maxima}
+      - DB_USERNAME=${DB_USERNAME:-regua_user}
+      - DB_PASSWORD=${DB_PASSWORD:-dev_password}
+      - DB_URL=jdbc:mysql://mysql-dev:3306/${DB_NAME:-regua_maxima}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-cmVndWEtbWF4aW1hLXNlY3JldC1rZXktZGV2ZWxvcG1lbnQtb25seS0yNTYtYml0cw==}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400}
+      - SHOW_SQL=${SHOW_SQL:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - SPRING_PROFILES_ACTIVE=dev
+      - PROJECT_BASE_DIR=/app
+      - FRONTEND_PROXY_URL=http://frontend-dev:4200
+    volumes:
+      - ./backend/sistema-orquestrador:/app/sistema-orquestrador
+      - ./backend/kernel-compartilhado:/app/kernel-compartilhado
+      - ./backend/autenticacao:/app/autenticacao
+      - ./backend/pom.xml:/app/pom.xml
+      - regua_maxima_maven_cache:/root/.m2
+      - regua_maxima_backend_target_kernel:/app/kernel-compartilhado/target
+      - regua_maxima_backend_target_auth:/app/autenticacao/target
+      - regua_maxima_backend_target_orquestrador:/app/sistema-orquestrador/target
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "6"
+          memory: 8G
+        reservations:
+          cpus: "4"
+          memory: 4G
+
+  # ================================================
+  # Frontend Angular + Ionic com hot-reload
+  # ================================================
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev.frontend
+    container_name: regua-maxima-frontend-dev
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+      - DOCKER_ENV=true
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_INTERVAL=500
+      - NODE_OPTIONS=--max-old-space-size=6144
+      - BACKEND_URL=http://backend-dev:8080
+    volumes:
+      - ./frontend:/app/frontend
+      - regua_maxima_frontend_node_modules:/app/frontend/node_modules
+      - regua_maxima_npm_cache:/root/.npm
+    depends_on:
+      backend-dev:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 6G
+        reservations:
+          cpus: "2"
+          memory: 2G
+    networks:
+      default:
+        aliases:
+          - frontend
+
+  # ================================================
+  # Emulador Android - DESATIVADO
+  # ================================================
+  # O emulador Android via Docker foi desativado em favor do
+  # Android Studio Emulator nativo, que oferece:
+  # - Janela nativa no Windows
+  # - Aceleração GPU (muito mais rápido)
+  # - Melhor integração com Capacitor
+  #
+  # Para usar o emulador nativo:
+  # 1. Abra o Android Studio
+  # 2. Acesse Tools > Device Manager
+  # 3. Crie ou inicie um AVD (Android Virtual Device)
+  # 4. No frontend: npm run cap:android
+  #
+  # Para reativar o emulador Docker, descomente a seção abaixo
+  # ================================================
+  # android-emulator:
+  #   image: budtmo/docker-android:emulator_14.0
+  #   container_name: regua-maxima-android-dev
+  #   privileged: true
+  #   ports:
+  #     - "5555:5555" # ADB
+  #     - "5900:5900" # VNC
+  #     - "6080:6080" # noVNC (acesso via browser)
+  #   environment:
+  #     - EMULATOR_DEVICE=Samsung Galaxy S10
+  #     - WEB_VNC=true
+  #     - WEB_LOG=true
+  #     - DATAPARTITION=4g
+  #   volumes:
+  #     - regua_maxima_android_data:/root/android_emulator
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "4"
+  #         memory: 6G
+  #       reservations:
+  #         cpus: "2"
+  #         memory: 4G
+  #   devices:
+  #     - /dev/kvm
+  #   restart: unless-stopped
+  #   networks:
+  #     default:
+  #       aliases:
+  #         - android-emulator
+
+volumes:
+  regua_maxima_mysql_data:
+    driver: local
+  regua_maxima_maven_cache:
+    driver: local
+  regua_maxima_npm_cache:
+    driver: local
+  regua_maxima_frontend_node_modules:
+    driver: local
+  regua_maxima_backend_target_kernel:
+    driver: local
+  regua_maxima_backend_target_auth:
+    driver: local
+  regua_maxima_backend_target_orquestrador:
+    driver: local
+  regua_maxima_android_data:
+    driver: local

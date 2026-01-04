@@ -1,0 +1,16 @@
+package com.reguamaxima.kernel.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Exceção para regras de negócio violadas.
+ * Retorna HTTP 400.
+ */
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class RegraNegocioException extends RuntimeException {
+
+    public RegraNegocioException(String mensagem) {
+        super(mensagem);
+    }
+}

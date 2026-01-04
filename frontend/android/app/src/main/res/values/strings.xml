@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Régua Máxima</string>
+    <string name="title_activity_main">Régua Máxima</string>
+    <string name="package_name">com.reguamaxima.app</string>
+    <string name="custom_url_scheme">com.reguamaxima.app</string>
+</resources>

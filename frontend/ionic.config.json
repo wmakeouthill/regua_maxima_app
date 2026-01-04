@@ -1,0 +1,8 @@
+{
+    "integrations": {},
+    "type": "angular",
+    "capacitor": {
+        "appId": "com.reguamaxima.app",
+        "appName": "Régua Máxima"
+    }
+}
