@@ -28,52 +28,56 @@ EXPOSE 8080 5005
 
 # Script para hot-reload automático
 # Monitora mudanças usando polling (compatível com Windows + Docker volumes)
-COPY <<EOF /app/watch-and-run.sh
-#!/bin/sh
-# Script para monitorar mudanças e recompilar automaticamente com DevTools
+# Criando o script diretamente com printf para evitar problemas de encoding
+RUN printf '#!/bin/sh\n\
+# Script para monitorar mudanças e recompilar automaticamente com DevTools\n\
+\n\
+# Compilar uma vez antes de iniciar\n\
+echo "Compilando projeto inicial..."\n\
+mvn install -DskipTests -q\n\
+\n\
+# Criar trigger file inicial e arquivo de controle\n\
+touch /app/sistema-orquestrador/.reloadtrigger\n\
+touch /tmp/last_check\n\
+\n\
+# Iniciar Spring Boot em background\n\
+echo "Iniciando Spring Boot com DevTools..."\n\
+mvn spring-boot:run -pl sistema-orquestrador \\\n\
+  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -XX:+UseZGC -XX:+ZGenerational" \\\n\
+  -Dspring-boot.run.profiles=dev \\\n\
+  -Dspring-boot.run.fork=false &\n\
+SPRING_PID=$!\n\
+\n\
+# Função para verificar e recompilar se necessário\n\
+check_and_recompile() {\n\
+  # Verificar se há arquivos .java modificados desde a última verificação\n\
+  if find /app -name "*.java" -type f -newer /tmp/last_check 2>/dev/null | grep -q .; then\n\
+    echo "[$(date +%%H:%%M:%%S)] Mudanças detectadas, recompilando..."\n\
+    mvn compile -DskipTests -q\n\
+    if [ $? -eq 0 ]; then\n\
+      # Tocar o trigger file para forçar restart do DevTools\n\
+      touch /app/sistema-orquestrador/.reloadtrigger\n\
+      echo "[$(date +%%H:%%M:%%S)] Recompilação concluída, DevTools irá reiniciar..."\n\
+    fi\n\
+    touch /tmp/last_check\n\
+  fi\n\
+}\n\
+\n\
+# Monitorar mudanças nos arquivos Java (polling a cada 2 segundos)\n\
+echo "Monitorando mudanças nos arquivos Java (polling a cada 2s)..."\n\
+while kill -0 $SPRING_PID 2>/dev/null; do\n\
+  check_and_recompile\n\
+  sleep 2\n\
+done\n\
+\n\
+echo "Spring Boot parou."\n' > /app/watch-and-run.sh && \
+    chmod +x /app/watch-and-run.sh && \
+    chmod 755 /app/watch-and-run.sh && \
+    test -f /app/watch-and-run.sh && \
+    test -x /app/watch-and-run.sh && \
+    head -1 /app/watch-and-run.sh | grep -q '^#!/bin/sh' || (echo "Erro: script não criado corretamente" && exit 1)
 
-# Compilar uma vez antes de iniciar
-echo "Compilando projeto inicial..."
-mvn install -DskipTests -q
-
-# Criar trigger file inicial e arquivo de controle
-touch /app/sistema-orquestrador/.reloadtrigger
-touch /tmp/last_check
-
-# Iniciar Spring Boot em background
-echo "Iniciando Spring Boot com DevTools..."
-mvn spring-boot:run -pl sistema-orquestrador \\
-  -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -XX:+UseZGC -XX:+ZGenerational' \\
-  -Dspring-boot.run.profiles=dev \\
-  -Dspring-boot.run.fork=false &
-SPRING_PID=\$!
-
-# Função para verificar e recompilar se necessário
-check_and_recompile() {
-  # Verificar se há arquivos .java modificados desde a última verificação
-  if find /app -name "*.java" -type f -newer /tmp/last_check 2>/dev/null | grep -q .; then
-    echo "[$(date +'%H:%M:%S')] Mudanças detectadas, recompilando..."
-    mvn compile -DskipTests -q
-    if [ \$? -eq 0 ]; then
-      # Tocar o trigger file para forçar restart do DevTools
-      touch /app/sistema-orquestrador/.reloadtrigger
-      echo "[$(date +'%H:%M:%S')] Recompilação concluída, DevTools irá reiniciar..."
-    fi
-    touch /tmp/last_check
-  fi
-}
-
-# Monitorar mudanças nos arquivos Java (polling a cada 2 segundos)
-echo "Monitorando mudanças nos arquivos Java (polling a cada 2s)..."
-while kill -0 \$SPRING_PID 2>/dev/null; do
-  check_and_recompile
-  sleep 2
-done
-
-echo "Spring Boot parou."
-EOF
-
-RUN chmod +x /app/watch-and-run.sh
-
-# Comando para rodar com hot-reload automático
+# Sobrescrever completamente o entrypoint do eclipse-temurin
+# O entrypoint padrão (/__cacert_entrypoint.sh) está causando problemas de execução
+ENTRYPOINT ["/bin/sh"]
 CMD ["/app/watch-and-run.sh"]
