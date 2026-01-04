@@ -1,0 +1,63 @@
+<ion-content [fullscreen]="true">
+    <!-- Stripe decorativo no topo -->
+    <div class="barbershop-stripe"></div>
+
+    <div class="welcome-container">
+        <!-- Header com logo -->
+        <header class="welcome-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <ion-icon name="cut-outline"></ion-icon>
+                </div>
+                <h1>Régua Máxima</h1>
+                <p class="tagline">Seu estilo, nossa precisão</p>
+            </div>
+        </header>
+
+        <!-- Título da seleção -->
+        <div class="selection-title">
+            <h2>Como deseja continuar?</h2>
+            <p>Selecione seu perfil para começar</p>
+        </div>
+
+        <!-- Cards de perfil -->
+        <div class="profile-cards">
+            @for (perfil of perfis; track perfil.tipo) {
+                <button 
+                    class="profile-card"
+                    [class]="'profile-card--' + perfil.tipo"
+                    (click)="selecionarPerfil(perfil.tipo)"
+                    type="button"
+                >
+                    <div class="card-content ion-activatable">
+                        <ion-ripple-effect></ion-ripple-effect>
+                        
+                        <div class="card-icon" [style.background]="perfil.cor">
+                            <ion-icon [name]="perfil.icone"></ion-icon>
+                        </div>
+                        
+                        <div class="card-info">
+                            <h3>{{ perfil.titulo }}</h3>
+                            <span class="card-subtitle">{{ perfil.subtitulo }}</span>
+                            <p>{{ perfil.descricao }}</p>
+                        </div>
+
+                        <div class="card-arrow">
+                            <ion-icon name="chevron-forward-outline"></ion-icon>
+                        </div>
+                    </div>
+                </button>
+            }
+        </div>
+
+        <!-- Footer -->
+        <footer class="welcome-footer">
+            <p>Gestão inteligente para sua barbearia</p>
+            <div class="footer-decoration">
+                <span></span>
+                <ion-icon name="cut-outline"></ion-icon>
+                <span></span>
+            </div>
+        </footer>
+    </div>
+</ion-content>

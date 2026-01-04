@@ -1,0 +1,125 @@
+.appointment-card {
+    margin: 8px 16px;
+}
+
+.appointment-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+    
+    ion-icon {
+        font-size: 48px;
+        color: var(--ion-color-medium);
+        opacity: 0.5;
+        margin-bottom: 12px;
+    }
+    
+    p {
+        color: var(--ion-color-medium);
+        margin: 0 0 16px;
+    }
+}
+
+.service-card {
+    margin: 8px 0;
+    
+    ion-card-content {
+        padding: 16px;
+    }
+    
+    ion-card-subtitle {
+        margin-bottom: 4px;
+    }
+    
+    ion-card-title {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+}
+
+.promo-card {
+    margin: 8px 16px;
+    background: linear-gradient(135deg, var(--ion-color-secondary) 0%, #8D6E63 100%);
+    border: none;
+    
+    ion-card-content {
+        color: #000;
+    }
+}
+
+.promo-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.promo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    ion-icon {
+        font-size: 24px;
+        color: #000;
+    }
+}
+
+.promo-text {
+    flex: 1;
+    
+    h4 {
+        margin: 0 0 4px;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    p {
+        margin: 0;
+        font-size: 13px;
+        opacity: 0.8;
+    }
+}
+
+.promo-card ion-chip {
+    --background: rgba(255, 255, 255, 0.9);
+    --color: var(--ion-color-primary);
+}
+
+.location-card {
+    margin: 8px 16px;
+}
+
+.location-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    > ion-icon {
+        font-size: 32px;
+        color: var(--ion-color-primary);
+    }
+}
+
+.location-text {
+    flex: 1;
+    
+    p {
+        margin: 0;
+        font-weight: 500;
+        color: var(--ion-color-tertiary);
+    }
+    
+    small {
+        color: var(--ion-color-medium);
+    }
+}
+
+ion-grid {
+    padding: 0 8px;
+}

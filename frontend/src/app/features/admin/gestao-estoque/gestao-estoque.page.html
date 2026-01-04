@@ -1,0 +1,184 @@
+<ion-header>
+    <ion-toolbar color="primary">
+        <ion-title>Gestão de Estoque</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="abrirModalNovoProduto()">
+                <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+
+    <ion-toolbar color="primary">
+        <ion-searchbar
+            [(ngModel)]="termoBusca"
+            (ionInput)="filtrar()"
+            placeholder="Buscar produtos..."
+            debounce="300"
+        ></ion-searchbar>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Alerta de estoque baixo -->
+    @if (produtosEstoqueBaixo().length > 0) {
+        <ion-card class="alerta-card">
+            <ion-card-content>
+                <div class="alerta-content">
+                    <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+                    <div>
+                        <strong>{{ produtosEstoqueBaixo().length }} produto(s)</strong> com estoque baixo
+                    </div>
+                </div>
+            </ion-card-content>
+        </ion-card>
+    }
+
+    @if (carregando()) {
+        <div class="loading-container">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>Carregando estoque...</p>
+        </div>
+    } @else if (produtosFiltrados().length === 0) {
+        <ion-card class="empty-card">
+            <ion-card-content>
+                <ion-icon name="cube-outline"></ion-icon>
+                <h4>Nenhum produto encontrado</h4>
+                <p>Cadastre produtos para gerenciar seu estoque</p>
+                <ion-button expand="block" (click)="abrirModalNovoProduto()">
+                    <ion-icon name="add-outline" slot="start"></ion-icon>
+                    Adicionar Produto
+                </ion-button>
+            </ion-card-content>
+        </ion-card>
+    } @else {
+        <ion-list>
+            @for (produto of produtosFiltrados(); track produto.id) {
+                <ion-item-sliding>
+                    <ion-item>
+                        <div slot="start" class="produto-icon">
+                            <ion-icon name="cube-outline"></ion-icon>
+                        </div>
+                        <ion-label>
+                            <h2>
+                                {{ produto.nome }}
+                                @if (produto.quantidade <= produto.estoqueMinimo) {
+                                    <ion-badge color="warning">Baixo</ion-badge>
+                                }
+                            </h2>
+                            <p>{{ produto.categoria }}</p>
+                        </ion-label>
+                        <div slot="end" class="quantidade-control">
+                            <ion-button fill="clear" size="small" (click)="diminuirQuantidade(produto, $event)">
+                                <ion-icon name="remove-outline" slot="icon-only"></ion-icon>
+                            </ion-button>
+                            <span class="quantidade">{{ produto.quantidade }}</span>
+                            <ion-button fill="clear" size="small" (click)="aumentarQuantidade(produto, $event)">
+                                <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                            </ion-button>
+                        </div>
+                    </ion-item>
+
+                    <ion-item-options side="end">
+                        <ion-item-option color="primary" (click)="editarProduto(produto)">
+                            <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                        </ion-item-option>
+                        <ion-item-option color="danger" (click)="excluirProduto(produto)">
+                            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                        </ion-item-option>
+                    </ion-item-options>
+                </ion-item-sliding>
+            }
+        </ion-list>
+    }
+
+    <!-- Modal de Produto -->
+    <ion-modal [isOpen]="mostrarModalProduto()" (didDismiss)="fecharModalProduto()">
+        <ng-template>
+            <ion-header>
+                <ion-toolbar color="primary">
+                    <ion-title>{{ produtoEditando() ? 'Editar' : 'Novo' }} Produto</ion-title>
+                    <ion-buttons slot="end">
+                        <ion-button (click)="fecharModalProduto()">
+                            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+                        </ion-button>
+                    </ion-buttons>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content class="ion-padding">
+                <ion-item>
+                    <ion-input
+                        type="text"
+                        label="Nome do Produto"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.nome"
+                        placeholder="Ex: Pomada Modeladora"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-input
+                        type="text"
+                        label="Categoria"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.categoria"
+                        placeholder="Ex: Finalizadores"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-input
+                        type="number"
+                        label="Quantidade Atual"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.quantidade"
+                        placeholder="0"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-input
+                        type="number"
+                        label="Estoque Mínimo"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.estoqueMinimo"
+                        placeholder="5"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-input
+                        type="number"
+                        label="Preço de Custo (R$)"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.precoCusto"
+                        placeholder="0.00"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-input
+                        type="number"
+                        label="Preço de Venda (R$)"
+                        labelPlacement="floating"
+                        [(ngModel)]="formProduto.precoVenda"
+                        placeholder="0.00"
+                    ></ion-input>
+                </ion-item>
+
+                <ion-button 
+                    expand="block" 
+                    class="save-button"
+                    (click)="salvarProduto()"
+                    [disabled]="!formProduto.nome || !formProduto.categoria"
+                >
+                    <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+                    Salvar
+                </ion-button>
+            </ion-content>
+        </ng-template>
+    </ion-modal>
+</ion-content>

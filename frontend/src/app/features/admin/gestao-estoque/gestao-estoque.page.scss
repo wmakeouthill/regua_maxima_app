@@ -1,0 +1,103 @@
+ion-searchbar {
+    --background: rgba(255, 255, 255, 0.15);
+    --color: white;
+    --placeholder-color: rgba(255, 255, 255, 0.7);
+    --icon-color: rgba(255, 255, 255, 0.7);
+    --clear-button-color: white;
+}
+
+.alerta-card {
+    margin: 16px;
+    border-left: 4px solid var(--ion-color-warning);
+}
+
+.alerta-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alerta-content ion-icon {
+    font-size: 24px;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 16px;
+    color: var(--ion-color-medium);
+}
+
+.empty-card {
+    text-align: center;
+    margin: 32px 16px;
+}
+
+.empty-card ion-icon {
+    font-size: 64px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+}
+
+.empty-card h4 {
+    margin: 0 0 8px 0;
+    color: var(--ion-color-dark);
+}
+
+.empty-card p {
+    color: var(--ion-color-medium);
+    margin-bottom: 24px;
+}
+
+.produto-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--ion-color-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.produto-icon ion-icon {
+    font-size: 20px;
+    color: var(--ion-color-primary);
+}
+
+ion-item h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+ion-item h2 ion-badge {
+    font-size: 0.65rem;
+}
+
+.quantidade-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.quantidade-control .quantidade {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.quantidade-control ion-button {
+    --padding-start: 4px;
+    --padding-end: 4px;
+}
+
+.save-button {
+    margin-top: 24px;
+}
+
+ion-modal ion-item {
+    margin-bottom: 8px;
+}

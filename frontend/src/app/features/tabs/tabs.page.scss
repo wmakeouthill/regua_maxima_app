@@ -1,0 +1,20 @@
+ion-tab-bar {
+    --background: var(--ion-tab-bar-background);
+}
+
+ion-tab-button {
+    --color: var(--ion-color-medium);
+    --color-selected: var(--ion-color-secondary);
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+}
+
+ion-tab-button ion-icon {
+    font-size: 24px;
+}
+
+ion-tab-button ion-label {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+}

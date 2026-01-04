@@ -1,14 +1,15 @@
 import { Component, signal, inject, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import {
     IonContent, IonItem, IonInput, IonButton, IonSpinner,
-    IonInputPasswordToggle, IonIcon, IonList
+    IonInputPasswordToggle, IonIcon, IonList, IonChip,
+    IonHeader, IonToolbar, IonButtons, IonBackButton
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { cutOutline } from 'ionicons/icons';
+import { cutOutline, personOutline, storefrontOutline, briefcaseOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService, TipoUsuario } from '@core/auth/auth.service';
 import { GoogleSignInService } from '@core/auth/google-signin.service';
 
 /**
@@ -20,125 +21,17 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
     standalone: true,
     imports: [
         IonContent, IonItem, IonInput, IonButton, IonSpinner,
-        IonInputPasswordToggle, IonIcon, IonList, FormsModule
+        IonInputPasswordToggle, IonIcon, IonList, IonChip,
+        IonHeader, IonToolbar, IonButtons, IonBackButton, FormsModule, RouterLink
     ],
-    template: `
-        <ion-content class="ion-padding" [fullscreen]="true">
-            <!-- Stripe decorativo -->
-            <div class="barbershop-stripe"></div>
-
-            <div class="auth-container animate-fade-in">
-                <!-- Header com Logo -->
-                <div class="auth-header">
-                    <div class="auth-logo">
-                        <ion-icon name="cut-outline"></ion-icon>
-                    </div>
-                    <h1>Régua Máxima</h1>
-                    <p>Seu estilo, nossa precisão</p>
-                </div>
-
-                <!-- Formulário de Login -->
-                <div class="auth-form">
-                    <form (ngSubmit)="login()">
-                        <ion-list>
-                            <ion-item>
-                                <ion-input
-                                    type="email"
-                                    label="Email"
-                                    labelPlacement="floating"
-                                    [(ngModel)]="email"
-                                    name="email"
-                                    autocomplete="email"
-                                    required
-                                ></ion-input>
-                            </ion-item>
-
-                            <ion-item>
-                                <ion-input
-                                    type="password"
-                                    label="Senha"
-                                    labelPlacement="floating"
-                                    [(ngModel)]="senha"
-                                    name="senha"
-                                    autocomplete="current-password"
-                                    required
-                                >
-                                    <ion-input-password-toggle slot="end"></ion-input-password-toggle>
-                                </ion-input>
-                            </ion-item>
-                        </ion-list>
-
-                        @if (erro()) {
-                            <div class="error-message">{{ erro() }}</div>
-                        }
-
-                        <ion-button 
-                            type="submit" 
-                            expand="block" 
-                            [disabled]="carregando()"
-                        >
-                            @if (carregando()) {
-                                <ion-spinner name="crescent"></ion-spinner>
-                            } @else {
-                                Entrar
-                            }
-                        </ion-button>
-                    </form>
-
-                    <!-- Divider -->
-                    @if (googleSignIn.isConfigured) {
-                        <div class="auth-divider">
-                            <span>ou continue com</span>
-                        </div>
-
-                        <!-- Botão do Google -->
-                        <div class="google-button-container" #googleButton>
-                            @if (!googleButtonRendered()) {
-                                <ion-spinner name="dots" color="medium"></ion-spinner>
-                            }
-                        </div>
-                    }
-                </div>
-
-                <!-- Footer -->
-                <div class="auth-footer">
-                    <ion-button 
-                        fill="clear" 
-                        expand="block" 
-                        routerLink="/registrar"
-                    >
-                        Não tem conta? <strong>&nbsp;Registre-se</strong>
-                    </ion-button>
-                </div>
-            </div>
-        </ion-content>
-    `,
-    styles: [`
-        ion-content {
-            --padding-top: 0;
-        }
-        
-        .barbershop-stripe {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 10;
-        }
-        
-        .auth-container {
-            padding-top: 24px;
-        }
-        
-        ion-list {
-            margin: 0;
-        }
-    `]
+    templateUrl: './login.page.html',
+    styleUrl: './login.page.scss'
 })
 export class LoginPage implements OnInit, OnDestroy {
     private authService = inject(AuthService);
     protected googleSignIn = inject(GoogleSignInService);
     private router = inject(Router);
+    private route = inject(ActivatedRoute);
     private cdr = inject(ChangeDetectorRef);
 
     @ViewChild('googleButton') googleButtonRef?: ElementRef<HTMLDivElement>;
@@ -151,23 +44,78 @@ export class LoginPage implements OnInit, OnDestroy {
     senha = '';
     erro = signal('');
     carregando = signal(false);
+    tipoUsuarioSelecionado = signal<TipoUsuario | null>(null);
 
     constructor() {
-        addIcons({ cutOutline });
+        addIcons({ cutOutline, personOutline, storefrontOutline, briefcaseOutline });
     }
 
     async ngOnInit(): Promise<void> {
-        // Inicializa Google OAuth (tenta mesmo se isConfigured for false inicialmente,
-        // pois o config pode ter falhado ao carregar - o initialize verifica internamente)
+        // Lê o tipo de usuário da query string
+        this.route.queryParams.subscribe(params => {
+            const tipo = params['tipo'] as TipoUsuario;
+            if (tipo && ['ADMIN', 'BARBEIRO', 'CLIENTE'].includes(tipo)) {
+                this.tipoUsuarioSelecionado.set(tipo);
+            }
+        });
+
+        // Inicializa Google OAuth
         try {
             await this.googleSignIn.initialize();
             if (this.googleSignIn.isConfigured) {
                 this.setupGoogleCredentialListener();
-                // Aguarda o ViewChild estar disponível e tenta renderizar
                 this.tentarRenderizarBotaoGoogle();
             }
         } catch (e) {
             console.error('Erro ao inicializar Google Sign-In:', e);
+        }
+    }
+
+    /**
+     * Retorna o ícone correspondente ao tipo de perfil selecionado
+     */
+    getIconePerfil(): string {
+        const icones: Record<TipoUsuario, string> = {
+            ADMIN: 'storefront-outline',
+            BARBEIRO: 'briefcase-outline',
+            CLIENTE: 'person-outline'
+        };
+        return icones[this.tipoUsuarioSelecionado()!] || 'person-outline';
+    }
+
+    /**
+     * Retorna o label do tipo de perfil selecionado
+     */
+    getLabelPerfil(): string {
+        const labels: Record<TipoUsuario, string> = {
+            ADMIN: 'Dono de Barbearia',
+            BARBEIRO: 'Barbeiro',
+            CLIENTE: 'Cliente'
+        };
+        return labels[this.tipoUsuarioSelecionado()!] || '';
+    }
+
+    /**
+     * Retorna a cor do chip baseado no tipo de perfil
+     */
+    getCorPerfil(): string {
+        const cores: Record<TipoUsuario, string> = {
+            ADMIN: 'secondary',
+            BARBEIRO: 'primary',
+            CLIENTE: 'success'
+        };
+        return cores[this.tipoUsuarioSelecionado()!] || 'primary';
+    }
+
+    /**
+     * Navega para a página de registro passando o tipo de usuário
+     */
+    irParaRegistro(): void {
+        const tipo = this.tipoUsuarioSelecionado();
+        if (tipo) {
+            this.router.navigate(['/registrar'], { queryParams: { tipo } });
+        } else {
+            this.router.navigate(['/registrar']);
         }
     }
 

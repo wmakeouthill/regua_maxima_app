@@ -1,0 +1,37 @@
+.profile-header .premium-badge {
+    margin-top: 12px;
+}
+
+ion-list.list-inset {
+    margin: 16px;
+}
+
+ion-item ion-icon[slot="start"] {
+    font-size: 22px;
+    margin-right: 12px;
+}
+
+ion-item ion-icon[slot="end"] {
+    font-size: 18px;
+}
+
+ion-note {
+    background: var(--ion-color-secondary);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.app-version {
+    text-align: center;
+    padding: 16px;
+    
+    p {
+        margin: 0;
+        color: var(--ion-color-medium);
+        font-size: 12px;
+    }
+}

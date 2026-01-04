@@ -1,0 +1,111 @@
+<ion-header>
+    <ion-toolbar color="primary">
+        <ion-title>Minha Fila</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="recarregar()">
+                <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Header do Barbeiro -->
+    <div class="barbeiro-header">
+        <div class="barbeiro-avatar">
+            <ion-icon name="person-outline"></ion-icon>
+        </div>
+        <div class="barbeiro-info">
+            <h2>{{ barbeiroNome() }}</h2>
+            <p>{{ atendimentosHoje() }} atendimentos hoje</p>
+        </div>
+        <div class="barbeiro-status" [class.ativo]="emAtendimento()">
+            <span>{{ emAtendimento() ? 'Ocupado' : 'Disponível' }}</span>
+        </div>
+    </div>
+
+    @if (carregando()) {
+        <div class="loading-container">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>Carregando...</p>
+        </div>
+    } @else {
+        <!-- Cliente Atual -->
+        @if (clienteAtual()) {
+            <ion-card class="cliente-atual-card">
+                <ion-card-header>
+                    <ion-card-subtitle>
+                        <ion-icon name="cut-outline"></ion-icon>
+                        Atendendo Agora
+                    </ion-card-subtitle>
+                    <ion-card-title>{{ clienteAtual()!.cliente.nome }}</ion-card-title>
+                </ion-card-header>
+                <ion-card-content>
+                    <div class="servico-info">
+                        <span class="servico-nome">{{ clienteAtual()!.servico.nome }}</span>
+                        <span class="servico-duracao">
+                            <ion-icon name="time-outline"></ion-icon>
+                            {{ clienteAtual()!.servico.duracao }} min
+                        </span>
+                    </div>
+
+                    <ion-button expand="block" color="success" (click)="finalizarAtendimento()">
+                        <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                        Finalizar Atendimento
+                    </ion-button>
+                </ion-card-content>
+            </ion-card>
+        }
+
+        <!-- Próximo da Fila -->
+        @if (proximoCliente() && !clienteAtual()) {
+            <ion-card class="proximo-card">
+                <ion-card-header>
+                    <ion-card-subtitle>Próximo</ion-card-subtitle>
+                    <ion-card-title>{{ proximoCliente()!.cliente.nome }}</ion-card-title>
+                </ion-card-header>
+                <ion-card-content>
+                    <p class="servico-destaque">{{ proximoCliente()!.servico.nome }}</p>
+                    <ion-button expand="block" (click)="iniciarAtendimento(proximoCliente()!)">
+                        <ion-icon name="play-outline" slot="start"></ion-icon>
+                        Iniciar Atendimento
+                    </ion-button>
+                </ion-card-content>
+            </ion-card>
+        }
+
+        <!-- Lista de Espera -->
+        <div class="section-header">
+            <h3>Fila de Espera</h3>
+            <span class="contador">{{ filaEspera().length }}</span>
+        </div>
+
+        @if (filaEspera().length === 0) {
+            <ion-card class="empty-card">
+                <ion-card-content>
+                    <ion-icon name="happy-outline"></ion-icon>
+                    <p>Nenhum cliente na fila</p>
+                </ion-card-content>
+            </ion-card>
+        } @else {
+            <ion-list>
+                @for (atendimento of filaEspera(); track atendimento.id; let i = $index) {
+                    <ion-item>
+                        <div slot="start" class="posicao">{{ i + 1 }}</div>
+                        <ion-label>
+                            <h3>{{ atendimento.cliente.nome }}</h3>
+                            <p>{{ atendimento.servico.nome }}</p>
+                        </ion-label>
+                        <span slot="end" class="tempo-espera">
+                            {{ getTempoEspera(atendimento.horaChegada) }}
+                        </span>
+                    </ion-item>
+                }
+            </ion-list>
+        }
+    }
+</ion-content>

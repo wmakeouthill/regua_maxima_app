@@ -1,0 +1,137 @@
+<ion-header>
+    <ion-toolbar color="primary">
+        <ion-title>Fila de Atendimentos</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="recarregar()">
+                <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Stats Resumo -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <span class="stat-value">{{ quantidadeAguardando() }}</span>
+            <span class="stat-label">Aguardando</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ quantidadeEmAtendimento() }}</span>
+            <span class="stat-label">Em Atendimento</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ quantidadeHoje() }}</span>
+            <span class="stat-label">Hoje</span>
+        </div>
+    </div>
+
+    @if (carregando()) {
+        <div class="loading-container">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>Carregando fila...</p>
+        </div>
+    } @else if (atendimentosAguardando().length === 0) {
+        <ion-card class="empty-card">
+            <ion-card-content>
+                <ion-icon name="person-outline"></ion-icon>
+                <h4>Nenhum cliente na fila</h4>
+                <p>Quando clientes chegarem, eles aparecerão aqui.</p>
+            </ion-card-content>
+        </ion-card>
+    } @else {
+        <!-- Lista de Atendimentos -->
+        <ion-list>
+            @for (atendimento of atendimentosAguardando(); track atendimento.id) {
+                <ion-item-sliding>
+                    <ion-item>
+                        <ion-avatar slot="start">
+                            @if (atendimento.cliente.fotoUrl) {
+                                <img [src]="atendimento.cliente.fotoUrl" [alt]="atendimento.cliente.nome" />
+                            } @else {
+                                <div class="avatar-placeholder">
+                                    <ion-icon name="person-outline"></ion-icon>
+                                </div>
+                            }
+                        </ion-avatar>
+                        <ion-label>
+                            <h2>
+                                <span class="posicao-badge">{{ atendimento.posicao }}º</span>
+                                {{ atendimento.cliente.nome }}
+                            </h2>
+                            <p>
+                                <ion-icon name="cut-outline"></ion-icon>
+                                {{ atendimento.servico.nome }}
+                            </p>
+                            <p class="hora-chegada">
+                                <ion-icon name="time-outline"></ion-icon>
+                                Chegou às {{ atendimento.horaChegada | date:'HH:mm' }}
+                            </p>
+                        </ion-label>
+                        <ion-chip 
+                            slot="end" 
+                            [color]="getStatusColor(atendimento.status)"
+                        >
+                            {{ getStatusLabel(atendimento.status) }}
+                        </ion-chip>
+                    </ion-item>
+
+                    <ion-item-options side="end">
+                        @if (atendimento.status === 'AGUARDANDO') {
+                            <ion-item-option color="primary" (click)="iniciarAtendimento(atendimento)">
+                                <ion-icon name="cut-outline" slot="icon-only"></ion-icon>
+                            </ion-item-option>
+                        }
+                        @if (atendimento.cliente.telefone) {
+                            <ion-item-option color="secondary" (click)="ligarCliente(atendimento)">
+                                <ion-icon name="call-outline" slot="icon-only"></ion-icon>
+                            </ion-item-option>
+                        }
+                        <ion-item-option color="danger" (click)="cancelarAtendimento(atendimento)">
+                            <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+                        </ion-item-option>
+                    </ion-item-options>
+                </ion-item-sliding>
+            }
+        </ion-list>
+
+        <!-- Em Atendimento -->
+        @if (atendimentosEmAtendimento().length > 0) {
+            <div class="section-header">
+                <h3>Em Atendimento</h3>
+            </div>
+            <ion-list>
+                @for (atendimento of atendimentosEmAtendimento(); track atendimento.id) {
+                    <ion-item>
+                        <ion-avatar slot="start">
+                            @if (atendimento.cliente.fotoUrl) {
+                                <img [src]="atendimento.cliente.fotoUrl" [alt]="atendimento.cliente.nome" />
+                            } @else {
+                                <div class="avatar-placeholder avatar-active">
+                                    <ion-icon name="cut-outline"></ion-icon>
+                                </div>
+                            }
+                        </ion-avatar>
+                        <ion-label>
+                            <h2>{{ atendimento.cliente.nome }}</h2>
+                            <p>{{ atendimento.servico.nome }}</p>
+                            @if (atendimento.barbeiro) {
+                                <p class="barbeiro-info">
+                                    <ion-icon name="person-outline"></ion-icon>
+                                    {{ atendimento.barbeiro.nome }}
+                                </p>
+                            }
+                        </ion-label>
+                        <ion-button slot="end" fill="outline" color="success" (click)="finalizarAtendimento(atendimento)">
+                            <ion-icon name="checkmark-circle-outline" slot="icon-only"></ion-icon>
+                        </ion-button>
+                    </ion-item>
+                }
+            </ion-list>
+        }
+    }
+</ion-content>

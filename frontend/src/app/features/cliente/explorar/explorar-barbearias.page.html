@@ -1,0 +1,157 @@
+<ion-header>
+    <ion-toolbar color="primary">
+        <ion-title>Barbearias</ion-title>
+        <ion-buttons slot="end">
+            <ion-button>
+                <ion-icon name="notifications-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+
+    <ion-toolbar color="primary">
+        <ion-searchbar
+            [(ngModel)]="termoBusca"
+            (ionInput)="buscar()"
+            placeholder="Buscar barbearias..."
+            debounce="300"
+        ></ion-searchbar>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Localização atual -->
+    <div class="location-bar">
+        <ion-icon name="location-outline"></ion-icon>
+        <span>{{ localizacaoAtual() }}</span>
+        <ion-button fill="clear" size="small">Alterar</ion-button>
+    </div>
+
+    <!-- Seletor Lista/Mapa -->
+    <div class="view-toggle">
+        <ion-segment [(ngModel)]="tipoVisualizacao" (ionChange)="alterarVisualizacao()">
+            <ion-segment-button value="lista">
+                <ion-icon name="list-outline"></ion-icon>
+                <ion-label>Lista</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="mapa">
+                <ion-icon name="map-outline"></ion-icon>
+                <ion-label>Mapa</ion-label>
+            </ion-segment-button>
+        </ion-segment>
+    </div>
+
+    @if (carregando()) {
+        <!-- Skeleton loading -->
+        <div class="skeleton-list">
+            @for (i of [1,2,3]; track i) {
+                <ion-card>
+                    <ion-card-content>
+                        <div class="skeleton-card">
+                            <ion-skeleton-text [animated]="true" style="width: 80px; height: 80px; border-radius: 12px;"></ion-skeleton-text>
+                            <div class="skeleton-info">
+                                <ion-skeleton-text [animated]="true" style="width: 60%; height: 20px;"></ion-skeleton-text>
+                                <ion-skeleton-text [animated]="true" style="width: 80%; height: 16px;"></ion-skeleton-text>
+                                <ion-skeleton-text [animated]="true" style="width: 40%; height: 16px;"></ion-skeleton-text>
+                            </div>
+                        </div>
+                    </ion-card-content>
+                </ion-card>
+            }
+        </div>
+    } @else if (tipoVisualizacao === 'mapa') {
+        <!-- Placeholder do Mapa -->
+        <div class="map-placeholder">
+            <ion-icon name="map-outline"></ion-icon>
+            <h3>Mapa de Barbearias</h3>
+            <p>Integração com Google Maps em breve</p>
+            <ion-button fill="outline" (click)="tipoVisualizacao = 'lista'">
+                Ver em Lista
+            </ion-button>
+        </div>
+    } @else if (barbeariasFiltradas().length === 0) {
+        <ion-card class="empty-card">
+            <ion-card-content>
+                <ion-icon name="storefront-outline"></ion-icon>
+                <h4>Nenhuma barbearia encontrada</h4>
+                <p>Tente buscar com outros termos ou altere sua localização</p>
+            </ion-card-content>
+        </ion-card>
+    } @else {
+        <!-- Lista de Barbearias -->
+        <div class="barbearias-list">
+            @for (barbearia of barbeariasFiltradas(); track barbearia.id) {
+                <ion-card (click)="abrirBarbearia(barbearia)" button>
+                    <ion-card-content>
+                        <div class="barbearia-card">
+                            <!-- Foto -->
+                            <div class="barbearia-foto">
+                                @if (barbearia.fotoUrl) {
+                                    <img [src]="barbearia.fotoUrl" [alt]="barbearia.nome" />
+                                } @else {
+                                    <div class="foto-placeholder">
+                                        <ion-icon name="storefront-outline"></ion-icon>
+                                    </div>
+                                }
+                                @if (barbearia.aberto) {
+                                    <ion-badge color="success" class="status-badge">Aberto</ion-badge>
+                                } @else {
+                                    <ion-badge color="medium" class="status-badge">Fechado</ion-badge>
+                                }
+                            </div>
+
+                            <!-- Info -->
+                            <div class="barbearia-info">
+                                <div class="barbearia-header">
+                                    <h3>{{ barbearia.nome }}</h3>
+                                    <ion-button 
+                                        fill="clear" 
+                                        size="small" 
+                                        (click)="toggleFavorito(barbearia, $event)"
+                                    >
+                                        <ion-icon 
+                                            [name]="barbearia.favorito ? 'heart' : 'heart-outline'"
+                                            [color]="barbearia.favorito ? 'danger' : 'medium'"
+                                            slot="icon-only"
+                                        ></ion-icon>
+                                    </ion-button>
+                                </div>
+
+                                <p class="endereco">
+                                    <ion-icon name="location-outline"></ion-icon>
+                                    {{ barbearia.endereco }}
+                                </p>
+
+                                <div class="barbearia-meta">
+                                    <span class="distancia">
+                                        <ion-icon name="navigate-outline"></ion-icon>
+                                        {{ barbearia.distanciaKm | number:'1.1-1' }} km
+                                    </span>
+                                    <span class="avaliacao">
+                                        <ion-icon name="star-outline" color="warning"></ion-icon>
+                                        {{ barbearia.avaliacaoMedia | number:'1.1-1' }}
+                                        <small>({{ barbearia.totalAvaliacoes }})</small>
+                                    </span>
+                                </div>
+
+                                @if (barbearia.servicoDestaque) {
+                                    <ion-chip size="small" color="secondary">
+                                        {{ barbearia.servicoDestaque }}
+                                        @if (barbearia.precoMinimo) {
+                                            - R$ {{ barbearia.precoMinimo | number:'1.0-0' }}
+                                        }
+                                    </ion-chip>
+                                }
+                            </div>
+
+                            <ion-icon name="chevron-forward-outline" class="arrow"></ion-icon>
+                        </div>
+                    </ion-card-content>
+                </ion-card>
+            }
+        </div>
+    }
+</ion-content>

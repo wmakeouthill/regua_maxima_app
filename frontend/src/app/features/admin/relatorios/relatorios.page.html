@@ -1,0 +1,157 @@
+<ion-header>
+    <ion-toolbar color="primary">
+        <ion-title>Relatórios</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <!-- Seletor de Período -->
+    <div class="periodo-selector">
+        <ion-segment [(ngModel)]="periodoSelecionado" (ionChange)="carregarRelatorios()">
+            <ion-segment-button value="hoje">
+                <ion-label>Hoje</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="semana">
+                <ion-label>Semana</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="mes">
+                <ion-label>Mês</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="ano">
+                <ion-label>Ano</ion-label>
+            </ion-segment-button>
+        </ion-segment>
+    </div>
+
+    @if (carregando()) {
+        <div class="loading-container">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>Carregando relatórios...</p>
+        </div>
+    } @else {
+        <!-- Cards de Indicadores -->
+        <div class="indicadores-grid">
+            <ion-card class="indicador-card receita">
+                <ion-card-content>
+                    <div class="indicador-icon">
+                        <ion-icon name="cash-outline"></ion-icon>
+                    </div>
+                    <div class="indicador-info">
+                        <span class="indicador-label">Receita Total</span>
+                        <span class="indicador-valor">R$ {{ indicadores().receitaTotal | number:'1.2-2' }}</span>
+                    </div>
+                </ion-card-content>
+            </ion-card>
+
+            <ion-card class="indicador-card atendimentos">
+                <ion-card-content>
+                    <div class="indicador-icon">
+                        <ion-icon name="people-outline"></ion-icon>
+                    </div>
+                    <div class="indicador-info">
+                        <span class="indicador-label">Atendimentos</span>
+                        <span class="indicador-valor">{{ indicadores().totalAtendimentos }}</span>
+                    </div>
+                </ion-card-content>
+            </ion-card>
+
+            <ion-card class="indicador-card ticket">
+                <ion-card-content>
+                    <div class="indicador-icon">
+                        <ion-icon name="pricetag-outline"></ion-icon>
+                    </div>
+                    <div class="indicador-info">
+                        <span class="indicador-label">Ticket Médio</span>
+                        <span class="indicador-valor">R$ {{ indicadores().ticketMedio | number:'1.2-2' }}</span>
+                    </div>
+                </ion-card-content>
+            </ion-card>
+
+            <ion-card class="indicador-card clientes">
+                <ion-card-content>
+                    <div class="indicador-icon">
+                        <ion-icon name="person-add-outline"></ion-icon>
+                    </div>
+                    <div class="indicador-info">
+                        <span class="indicador-label">Novos Clientes</span>
+                        <span class="indicador-valor">{{ indicadores().novosClientes }}</span>
+                    </div>
+                </ion-card-content>
+            </ion-card>
+        </div>
+
+        <!-- Serviços Mais Populares -->
+        <ion-card class="section-card">
+            <ion-card-header>
+                <ion-card-title>
+                    <ion-icon name="trophy-outline"></ion-icon>
+                    Serviços Mais Populares
+                </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+                @if (servicosPopulares().length === 0) {
+                    <p class="empty-text">Nenhum dado disponível</p>
+                } @else {
+                    <ion-list lines="none">
+                        @for (servico of servicosPopulares(); track servico.id; let i = $index) {
+                            <ion-item>
+                                <div slot="start" class="ranking-badge" [class.top]="i < 3">
+                                    {{ i + 1 }}º
+                                </div>
+                                <ion-label>
+                                    <h3>{{ servico.nome }}</h3>
+                                    <p>{{ servico.quantidade }} realizados</p>
+                                </ion-label>
+                                <span slot="end" class="servico-receita">
+                                    R$ {{ servico.receita | number:'1.0-0' }}
+                                </span>
+                            </ion-item>
+                        }
+                    </ion-list>
+                }
+            </ion-card-content>
+        </ion-card>
+
+        <!-- Top Barbeiros -->
+        <ion-card class="section-card">
+            <ion-card-header>
+                <ion-card-title>
+                    <ion-icon name="star-outline"></ion-icon>
+                    Top Barbeiros
+                </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+                @if (topBarbeiros().length === 0) {
+                    <p class="empty-text">Nenhum dado disponível</p>
+                } @else {
+                    <ion-list lines="none">
+                        @for (barbeiro of topBarbeiros(); track barbeiro.id; let i = $index) {
+                            <ion-item>
+                                <ion-avatar slot="start">
+                                    @if (barbeiro.fotoUrl) {
+                                        <img [src]="barbeiro.fotoUrl" [alt]="barbeiro.nome" />
+                                    } @else {
+                                        <div class="avatar-placeholder">
+                                            <ion-icon name="person-outline"></ion-icon>
+                                        </div>
+                                    }
+                                </ion-avatar>
+                                <ion-label>
+                                    <h3>{{ barbeiro.nome }}</h3>
+                                    <p>{{ barbeiro.atendimentos }} atendimentos</p>
+                                </ion-label>
+                                <div slot="end" class="barbeiro-stats">
+                                    <span class="receita">R$ {{ barbeiro.receita | number:'1.0-0' }}</span>
+                                    <span class="avaliacao">
+                                        <ion-icon name="star" color="warning"></ion-icon>
+                                        {{ barbeiro.avaliacaoMedia | number:'1.1-1' }}
+                                    </span>
+                                </div>
+                            </ion-item>
+                        }
+                    </ion-list>
+                }
+            </ion-card-content>
+        </ion-card>
+    }
+</ion-content>

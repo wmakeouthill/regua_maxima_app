@@ -10,8 +10,12 @@ import { roleGuard } from './core/auth/role.guard';
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: 'tabs',
+        redirectTo: 'welcome',
         pathMatch: 'full'
+    },
+    {
+        path: 'welcome',
+        loadComponent: () => import('./features/auth/welcome/welcome.page').then(m => m.WelcomePage)
     },
     {
         path: 'login',
@@ -67,6 +71,22 @@ export const routes: Routes = [
                     {
                         path: 'barbeiros',
                         loadComponent: () => import('./features/admin/barbeiros/gerenciar-barbeiros.page').then(m => m.GerenciarBarbeirosPage)
+                    },
+                    {
+                        path: 'fila',
+                        loadComponent: () => import('./features/admin/fila-atendimentos/fila-atendimentos.page').then(m => m.FilaAtendimentosPage)
+                    },
+                    {
+                        path: 'sessao',
+                        loadComponent: () => import('./features/admin/sessao-trabalho/sessao-trabalho.page').then(m => m.SessaoTrabalhoPage)
+                    },
+                    {
+                        path: 'relatorios',
+                        loadComponent: () => import('./features/admin/relatorios/relatorios.page').then(m => m.RelatoriosPage)
+                    },
+                    {
+                        path: 'estoque',
+                        loadComponent: () => import('./features/admin/gestao-estoque/gestao-estoque.page').then(m => m.GestaoEstoquePage)
                     }
                 ]
             },
@@ -78,8 +98,12 @@ export const routes: Routes = [
                 children: [
                     {
                         path: '',
-                        redirectTo: 'agenda',
+                        redirectTo: 'fila',
                         pathMatch: 'full'
+                    },
+                    {
+                        path: 'fila',
+                        loadComponent: () => import('./features/barbeiro/fila/fila-clientes.page').then(m => m.FilaClientesPage)
                     },
                     {
                         path: 'agenda',
@@ -97,7 +121,21 @@ export const routes: Routes = [
             },
 
             // ========== Área do Cliente ==========
-            // TODO: Adicionar rotas de explorar, mapa, favoritos
+            {
+                path: 'cliente',
+                canActivate: [roleGuard(['CLIENTE'])],
+                children: [
+                    {
+                        path: '',
+                        redirectTo: 'explorar',
+                        pathMatch: 'full'
+                    },
+                    {
+                        path: 'explorar',
+                        loadComponent: () => import('./features/cliente/explorar/explorar-barbearias.page').then(m => m.ExplorarBarbeariasPage)
+                    }
+                ]
+            },
 
             {
                 path: '',
