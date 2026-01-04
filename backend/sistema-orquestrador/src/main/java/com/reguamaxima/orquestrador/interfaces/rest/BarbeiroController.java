@@ -1,6 +1,6 @@
 package com.reguamaxima.orquestrador.interfaces.rest;
 
-import com.reguamaxima.compartilhado.security.CustomUserDetails;
+import com.reguamaxima.kernel.security.CustomUserDetails;
 import com.reguamaxima.orquestrador.aplicacao.ServicoBarbeiro;
 import com.reguamaxima.orquestrador.dominio.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
