@@ -1,0 +1,161 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar índices para barbearias e servicos
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Índices para otimização de consultas
+  # ========================================================
+
+  # ========== Índices para Barbearias ==========
+
+  - changeSet:
+      id: 004-criar-indice-barbearias-slug
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEARIAS_SLUG
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEARIAS_SLUG
+            tableName: barbearias
+            unique: true
+            columns:
+              - column:
+                  name: slug
+
+  - changeSet:
+      id: 004-criar-indice-barbearias-admin
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEARIAS_ADMIN_ID
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEARIAS_ADMIN_ID
+            tableName: barbearias
+            columns:
+              - column:
+                  name: admin_id
+
+  - changeSet:
+      id: 004-criar-indice-barbearias-cidade
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEARIAS_CIDADE
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEARIAS_CIDADE
+            tableName: barbearias
+            columns:
+              - column:
+                  name: cidade
+
+  - changeSet:
+      id: 004-criar-indice-barbearias-ativo
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEARIAS_ATIVO
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEARIAS_ATIVO
+            tableName: barbearias
+            columns:
+              - column:
+                  name: ativo
+
+  - changeSet:
+      id: 004-criar-indice-barbearias-geolocalizacao
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEARIAS_GEO
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEARIAS_GEO
+            tableName: barbearias
+            columns:
+              - column:
+                  name: latitude
+              - column:
+                  name: longitude
+
+  # ========== Índices para Serviços ==========
+
+  - changeSet:
+      id: 004-criar-indice-servicos-barbearia
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_SERVICOS_BARBEARIA_ID
+        - tableExists:
+            tableName: servicos
+      changes:
+        - createIndex:
+            indexName: IDX_SERVICOS_BARBEARIA_ID
+            tableName: servicos
+            columns:
+              - column:
+                  name: barbearia_id
+
+  - changeSet:
+      id: 004-criar-indice-servicos-ativo
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_SERVICOS_ATIVO
+        - tableExists:
+            tableName: servicos
+      changes:
+        - createIndex:
+            indexName: IDX_SERVICOS_ATIVO
+            tableName: servicos
+            columns:
+              - column:
+                  name: ativo
+
+  - changeSet:
+      id: 004-criar-indice-servicos-ordem
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_SERVICOS_ORDEM
+        - tableExists:
+            tableName: servicos
+      changes:
+        - createIndex:
+            indexName: IDX_SERVICOS_ORDEM
+            tableName: servicos
+            columns:
+              - column:
+                  name: barbearia_id
+              - column:
+                  name: ordem_exibicao

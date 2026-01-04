@@ -23,9 +23,37 @@ export interface Usuario {
     email: string;
     telefone?: string;
     roles: string[];
+    tipoUsuario: TipoUsuario;
+    tipoUsuarioDescricao: string;
     emailVerificado: boolean;
     dataCriacao: string;
 }
+
+/**
+ * Tipos de usuário disponíveis no sistema.
+ */
+export type TipoUsuario = 'ADMIN' | 'CLIENTE' | 'BARBEIRO';
+
+/**
+ * Opções de tipo de usuário para seleção no registro.
+ */
+export const TIPOS_USUARIO: { valor: TipoUsuario; label: string; descricao: string }[] = [
+    {
+        valor: 'CLIENTE',
+        label: 'Cliente',
+        descricao: 'Quero agendar serviços em barbearias'
+    },
+    {
+        valor: 'BARBEIRO',
+        label: 'Barbeiro',
+        descricao: 'Sou profissional e quero oferecer meus serviços'
+    },
+    {
+        valor: 'ADMIN',
+        label: 'Dono de Barbearia',
+        descricao: 'Quero cadastrar e gerenciar minha barbearia'
+    }
+];
 
 /**
  * Serviço de autenticação.
@@ -87,12 +115,23 @@ export class AuthService {
     }
 
     /**
-     * Registra novo usuário.
+     * Registra novo usuário com tipo específico.
+     * @param nome Nome do usuário
+     * @param email Email do usuário
+     * @param senha Senha do usuário
+     * @param tipoUsuario Tipo: ADMIN, CLIENTE ou BARBEIRO
+     * @param telefone Telefone opcional
      */
-    registrar(nome: string, email: string, senha: string, telefone?: string): Observable<AuthResponse> {
+    registrar(
+        nome: string,
+        email: string,
+        senha: string,
+        tipoUsuario: TipoUsuario,
+        telefone?: string
+    ): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/registrar`,
-            { nome, email, senha, telefone }
+            { nome, email, senha, telefone, tipoUsuario }
         ).pipe(
             switchMap(response =>
                 from(this.saveTokens(response)).pipe(
@@ -104,6 +143,34 @@ export class AuthService {
                 )
             )
         );
+    }
+
+    /**
+     * Retorna o tipo de usuário atual.
+     */
+    getTipoUsuario(): TipoUsuario | null {
+        return this._currentUser()?.tipoUsuario ?? null;
+    }
+
+    /**
+     * Verifica se o usuário é Admin (Dono de Barbearia).
+     */
+    isAdmin(): boolean {
+        return this.getTipoUsuario() === 'ADMIN';
+    }
+
+    /**
+     * Verifica se o usuário é Barbeiro.
+     */
+    isBarbeiro(): boolean {
+        return this.getTipoUsuario() === 'BARBEIRO';
+    }
+
+    /**
+     * Verifica se o usuário é Cliente.
+     */
+    isCliente(): boolean {
+        return this.getTipoUsuario() === 'CLIENTE';
     }
 
     /**

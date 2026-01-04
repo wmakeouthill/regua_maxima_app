@@ -53,6 +53,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Liquibase para versionamento de banco -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
         <!-- DevTools para hot-reload -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

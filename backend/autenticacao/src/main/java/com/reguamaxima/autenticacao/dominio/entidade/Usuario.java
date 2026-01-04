@@ -11,7 +11,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Entidade Usuario - implementa UserDetails para integração com Spring Security.
+ * Entidade Usuario - implementa UserDetails para integração com Spring
+ * Security.
  */
 @Entity
 @Table(name = "usuarios")
@@ -41,7 +42,7 @@ public class Usuario implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private Role role = Role.USER;
+    private Role role = Role.CLIENTE;
 
     @Column(name = "ativo", nullable = false)
     @Builder.Default
@@ -107,9 +108,25 @@ public class Usuario implements UserDetails {
 
     // ========== Enum Role ==========
 
+    /**
+     * Roles disponíveis no sistema.
+     * - ADMIN: Dono de barbearia (gestão completa)
+     * - CLIENTE: Cliente final (agenda serviços)
+     * - BARBEIRO: Profissional barbeiro
+     */
     public enum Role {
-        USER,
-        ADMIN,
-        MODERATOR
+        ADMIN("Administrador"),
+        CLIENTE("Cliente"),
+        BARBEIRO("Barbeiro");
+
+        private final String descricao;
+
+        Role(String descricao) {
+            this.descricao = descricao;
+        }
+
+        public String getDescricao() {
+            return descricao;
+        }
     }
 }

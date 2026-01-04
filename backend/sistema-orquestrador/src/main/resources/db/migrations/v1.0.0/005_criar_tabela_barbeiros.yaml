@@ -1,0 +1,298 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela barbeiros
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Tabela de barbeiros (profissionais)
+  # ========================================================
+
+  - changeSet:
+      id: 005-criar-tabela-barbeiros
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: barbeiros
+        - tableExists:
+            tableName: usuarios
+        - tableExists:
+            tableName: barbearias
+      comment: "Cria tabela de barbeiros vinculada a usuário e opcionalmente a barbearia"
+      changes:
+        - createTable:
+            tableName: barbeiros
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # ========== Vínculo com Usuário ==========
+              - column:
+                  name: usuario_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              # ========== Dados Profissionais ==========
+              - column:
+                  name: nome_profissional
+                  type: VARCHAR(100)
+
+              - column:
+                  name: bio
+                  type: VARCHAR(1000)
+
+              - column:
+                  name: especialidades
+                  type: VARCHAR(500)
+
+              - column:
+                  name: anos_experiencia
+                  type: INT
+
+              # ========== Imagens ==========
+              - column:
+                  name: foto_url
+                  type: VARCHAR(500)
+
+              - column:
+                  name: portfolio_urls
+                  type: VARCHAR(2000)
+                  remarks: "JSON array com URLs das fotos de trabalhos"
+
+              # ========== Geolocalização ==========
+              - column:
+                  name: latitude
+                  type: DOUBLE
+
+              - column:
+                  name: longitude
+                  type: DOUBLE
+
+              - column:
+                  name: visivel_mapa
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+              # ========== Contato ==========
+              - column:
+                  name: telefone
+                  type: VARCHAR(20)
+
+              - column:
+                  name: whatsapp
+                  type: VARCHAR(20)
+
+              - column:
+                  name: instagram
+                  type: VARCHAR(200)
+
+              # ========== Vínculo com Barbearia ==========
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  remarks: "NULL se barbeiro autônomo"
+
+              - column:
+                  name: status_vinculo
+                  type: VARCHAR(20)
+                  defaultValue: "SEM_VINCULO"
+                  remarks: "SEM_VINCULO, PENDENTE, APROVADO, REJEITADO"
+
+              - column:
+                  name: data_solicitacao_vinculo
+                  type: DATETIME
+
+              # ========== Avaliações ==========
+              - column:
+                  name: avaliacao_media
+                  type: DOUBLE
+                  defaultValueNumeric: 0.0
+
+              - column:
+                  name: total_avaliacoes
+                  type: INT
+                  defaultValueNumeric: 0
+
+              - column:
+                  name: total_atendimentos
+                  type: INT
+                  defaultValueNumeric: 0
+
+              # ========== Status e Auditoria ==========
+              - column:
+                  name: ativo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: perfil_completo
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_criacao
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: DATETIME
+
+  # ========== Foreign Keys ==========
+
+  - changeSet:
+      id: 005-criar-fk-barbeiros-usuario
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: FK_BARBEIROS_USUARIOS
+        - tableExists:
+            tableName: barbeiros
+        - tableExists:
+            tableName: usuarios
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: barbeiros
+            baseColumnNames: usuario_id
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            constraintName: FK_BARBEIROS_USUARIOS
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+  - changeSet:
+      id: 005-criar-fk-barbeiros-barbearia
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: FK_BARBEIROS_BARBEARIAS
+        - tableExists:
+            tableName: barbeiros
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: barbeiros
+            baseColumnNames: barbearia_id
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            constraintName: FK_BARBEIROS_BARBEARIAS
+            onDelete: SET NULL
+            onUpdate: CASCADE
+
+  # ========== Índices ==========
+
+  - changeSet:
+      id: 005-criar-indice-barbeiros-usuario
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEIROS_USUARIO_ID
+        - tableExists:
+            tableName: barbeiros
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEIROS_USUARIO_ID
+            tableName: barbeiros
+            unique: true
+            columns:
+              - column:
+                  name: usuario_id
+
+  - changeSet:
+      id: 005-criar-indice-barbeiros-barbearia
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEIROS_BARBEARIA_ID
+        - tableExists:
+            tableName: barbeiros
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEIROS_BARBEARIA_ID
+            tableName: barbeiros
+            columns:
+              - column:
+                  name: barbearia_id
+
+  - changeSet:
+      id: 005-criar-indice-barbeiros-status-vinculo
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEIROS_STATUS_VINCULO
+        - tableExists:
+            tableName: barbeiros
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEIROS_STATUS_VINCULO
+            tableName: barbeiros
+            columns:
+              - column:
+                  name: status_vinculo
+
+  - changeSet:
+      id: 005-criar-indice-barbeiros-geo
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEIROS_GEO
+        - tableExists:
+            tableName: barbeiros
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEIROS_GEO
+            tableName: barbeiros
+            columns:
+              - column:
+                  name: latitude
+              - column:
+                  name: longitude
+
+  - changeSet:
+      id: 005-criar-indice-barbeiros-ativo-mapa
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_BARBEIROS_ATIVO_MAPA
+        - tableExists:
+            tableName: barbeiros
+      changes:
+        - createIndex:
+            indexName: IDX_BARBEIROS_ATIVO_MAPA
+            tableName: barbeiros
+            columns:
+              - column:
+                  name: ativo
+              - column:
+                  name: visivel_mapa

@@ -61,10 +61,10 @@ public class AuthService {
         usuario.setUltimoLogin(LocalDateTime.now());
         usuarioRepository.save(usuario);
 
-        // Gerar tokens
+        // Gerar tokens com ID do usuário
         List<String> roles = List.of("ROLE_" + usuario.getRole().name());
-        String accessToken = jwtService.generateAccessToken(usuario.getEmail(), roles);
-        String refreshToken = jwtService.generateRefreshToken(usuario.getEmail());
+        String accessToken = jwtService.generateAccessToken(usuario.getId(), usuario.getEmail(), roles);
+        String refreshToken = jwtService.generateRefreshToken(usuario.getId(), usuario.getEmail());
 
         log.info("Login realizado com sucesso: {}", request.email());
 
@@ -77,34 +77,35 @@ public class AuthService {
 
     /**
      * Registra novo usuário.
+     * Suporta diferentes tipos: ADMIN, CLIENTE, BARBEIRO.
      */
     @Transactional
     public AuthResponseDTO registrar(RegistroRequestDTO request) {
-        log.info("Tentativa de registro: {}", request.email());
+        log.info("Tentativa de registro: {} como {}", request.email(), request.tipoUsuario());
 
         // Verificar se email já existe
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new RegraNegocioException("Email já cadastrado");
         }
 
-        // Criar usuário
+        // Criar usuário com tipo especificado
         Usuario usuario = Usuario.builder()
                 .nome(request.nome())
                 .email(request.email())
                 .senha(passwordEncoder.encode(request.senha()))
                 .telefone(request.telefone())
-                .role(Usuario.Role.USER)
+                .role(request.tipoUsuario())
                 .ativo(true)
                 .build();
 
         usuario = usuarioRepository.save(usuario);
 
-        // Gerar tokens
+        // Gerar tokens com ID do usuário
         List<String> roles = List.of("ROLE_" + usuario.getRole().name());
-        String accessToken = jwtService.generateAccessToken(usuario.getEmail(), roles);
-        String refreshToken = jwtService.generateRefreshToken(usuario.getEmail());
+        String accessToken = jwtService.generateAccessToken(usuario.getId(), usuario.getEmail(), roles);
+        String refreshToken = jwtService.generateRefreshToken(usuario.getId(), usuario.getEmail());
 
-        log.info("Registro realizado com sucesso: {}", request.email());
+        log.info("Registro realizado com sucesso: {} como {}", request.email(), usuario.getRole());
 
         return new AuthResponseDTO(
                 accessToken,
@@ -130,9 +131,9 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmailAndAtivoTrue(email)
                 .orElseThrow(() -> new BadCredentialsException("Usuário não encontrado"));
 
-        // Gerar novo access token
+        // Gerar novo access token com ID do usuário
         List<String> roles = List.of("ROLE_" + usuario.getRole().name());
-        String newAccessToken = jwtService.generateAccessToken(usuario.getEmail(), roles);
+        String newAccessToken = jwtService.generateAccessToken(usuario.getId(), usuario.getEmail(), roles);
 
         return new AuthResponseDTO(
                 newAccessToken,
@@ -174,10 +175,10 @@ public class AuthService {
         }
         usuarioRepository.save(usuario);
 
-        // Gerar tokens
+        // Gerar tokens com ID do usuário
         List<String> roles = List.of("ROLE_" + usuario.getRole().name());
-        String accessToken = jwtService.generateAccessToken(usuario.getEmail(), roles);
-        String refreshToken = jwtService.generateRefreshToken(usuario.getEmail());
+        String accessToken = jwtService.generateAccessToken(usuario.getId(), usuario.getEmail(), roles);
+        String refreshToken = jwtService.generateRefreshToken(usuario.getId(), usuario.getEmail());
 
         log.info("Login com Google realizado com sucesso: {}", email);
 
@@ -214,6 +215,7 @@ public class AuthService {
 
     /**
      * Cria novo usuário a partir dos dados do Google.
+     * Por padrão, usuários do Google são criados como CLIENTE.
      */
     private Usuario criarUsuarioGoogle(String email, String nome, boolean emailVerificado) {
         log.info("Criando novo usuário via Google: {}", email);
@@ -222,7 +224,7 @@ public class AuthService {
                 .nome(nome != null ? nome : email.split("@")[0])
                 .email(email)
                 .senha(passwordEncoder.encode(UUID.randomUUID().toString())) // Senha aleatória
-                .role(Usuario.Role.USER)
+                .role(Usuario.Role.CLIENTE) // Padrão é cliente
                 .ativo(true)
                 .emailVerificado(emailVerificado)
                 .build();

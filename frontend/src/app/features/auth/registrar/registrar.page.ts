@@ -3,13 +3,14 @@ import { Router } from '@angular/router';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonItem,
     IonInput, IonButton, IonSpinner,
-    IonInputPasswordToggle, IonBackButton, IonButtons, IonIcon, IonList
+    IonInputPasswordToggle, IonBackButton, IonButtons, IonIcon, IonList,
+    IonRadioGroup, IonRadio, IonText
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { cutOutline } from 'ionicons/icons';
+import { cutOutline, personOutline, storefrontOutline, briefcaseOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
-import { AuthService } from '@core/auth/auth.service';
+import { AuthService, TipoUsuario, TIPOS_USUARIO } from '@core/auth/auth.service';
 import { GoogleSignInService } from '@core/auth/google-signin.service';
 
 /**
@@ -21,8 +22,9 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
     standalone: true,
     imports: [
         IonHeader, IonToolbar, IonTitle, IonContent, IonItem,
-        IonInput, IonButton, IonSpinner, IonList,
-        IonInputPasswordToggle, IonBackButton, IonButtons, IonIcon, FormsModule
+        IonInput, IonButton, IonSpinner, IonList, IonText,
+        IonInputPasswordToggle, IonBackButton, IonButtons, IonIcon,
+        IonRadioGroup, IonRadio, FormsModule
     ],
     template: `
         <ion-header>
@@ -42,12 +44,34 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
                         <ion-icon name="cut-outline"></ion-icon>
                     </div>
                     <h1>Junte-se a nós</h1>
-                    <p>Crie sua conta e agende seu corte</p>
+                    <p>Crie sua conta e comece agora</p>
                 </div>
 
                 <!-- Formulário de Registro -->
                 <div class="auth-form">
                     <form (ngSubmit)="registrar()">
+                        <!-- Seleção de Tipo de Usuário -->
+                        <div class="tipo-usuario-section">
+                            <ion-text color="medium">
+                                <p class="section-label">Sou um(a):</p>
+                            </ion-text>
+                            <ion-radio-group [(ngModel)]="tipoUsuario" name="tipoUsuario">
+                                @for (tipo of tiposUsuario; track tipo.valor) {
+                                    <div class="tipo-card" [class.selected]="tipoUsuario === tipo.valor">
+                                        <ion-radio [value]="tipo.valor" labelPlacement="end">
+                                            <div class="tipo-content">
+                                                <ion-icon [name]="getIcone(tipo.valor)"></ion-icon>
+                                                <div class="tipo-info">
+                                                    <strong>{{ tipo.label }}</strong>
+                                                    <span>{{ tipo.descricao }}</span>
+                                                </div>
+                                            </div>
+                                        </ion-radio>
+                                    </div>
+                                }
+                            </ion-radio-group>
+                        </div>
+
                         <ion-list>
                             <ion-item>
                                 <ion-input
@@ -144,6 +168,65 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
         ion-list {
             margin: 0;
         }
+
+        .tipo-usuario-section {
+            margin-bottom: 16px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .tipo-card {
+            background: var(--ion-color-light);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            padding: 12px 16px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tipo-card.selected {
+            border-color: var(--ion-color-primary);
+            background: var(--ion-color-primary-tint);
+        }
+
+        .tipo-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tipo-content ion-icon {
+            font-size: 24px;
+            color: var(--ion-color-primary);
+        }
+
+        .tipo-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tipo-info strong {
+            font-size: 15px;
+            color: var(--ion-color-dark);
+        }
+
+        .tipo-info span {
+            font-size: 12px;
+            color: var(--ion-color-medium);
+        }
+
+        ion-radio {
+            --color-checked: var(--ion-color-primary);
+            width: 100%;
+        }
+
+        ion-radio::part(container) {
+            display: none;
+        }
     `]
 })
 export class RegistrarPage implements OnInit, OnDestroy, AfterViewChecked {
@@ -155,15 +238,34 @@ export class RegistrarPage implements OnInit, OnDestroy, AfterViewChecked {
     private googleButtonRendered = false;
     private credentialSub?: Subscription;
 
+    // Campos do formulário
     nome = '';
     email = '';
     telefone = '';
     senha = '';
+    tipoUsuario: TipoUsuario = 'CLIENTE';
+
+    // Opções de tipo de usuário
+    tiposUsuario = TIPOS_USUARIO;
+
+    // Estado
     erro = signal('');
     carregando = signal(false);
 
     constructor() {
-        addIcons({ cutOutline });
+        addIcons({ cutOutline, personOutline, storefrontOutline, briefcaseOutline });
+    }
+
+    /**
+     * Retorna o ícone correspondente ao tipo de usuário.
+     */
+    getIcone(tipo: TipoUsuario): string {
+        switch (tipo) {
+            case 'CLIENTE': return 'person-outline';
+            case 'ADMIN': return 'storefront-outline';
+            case 'BARBEIRO': return 'briefcase-outline';
+            default: return 'person-outline';
+        }
     }
 
     async ngOnInit() {
@@ -235,17 +337,42 @@ export class RegistrarPage implements OnInit, OnDestroy, AfterViewChecked {
             return;
         }
 
+        if (!this.tipoUsuario) {
+            this.erro.set('Selecione o tipo de conta');
+            return;
+        }
+
         this.erro.set('');
         this.carregando.set(true);
 
-        this.authService.registrar(this.nome, this.email, this.senha, this.telefone).subscribe({
+        this.authService.registrar(
+            this.nome,
+            this.email,
+            this.senha,
+            this.tipoUsuario,
+            this.telefone || undefined
+        ).subscribe({
             next: () => {
-                this.router.navigate(['/tabs/home']);
+                // Redireciona baseado no tipo de usuário
+                const redirect = this.getRedirectPath();
+                this.router.navigate([redirect]);
             },
             error: (err) => {
                 this.carregando.set(false);
                 this.erro.set(err.error?.message || 'Erro ao criar conta');
             }
         });
+    }
+
+    /**
+     * Retorna o path de redirecionamento baseado no tipo de usuário.
+     */
+    private getRedirectPath(): string {
+        switch (this.tipoUsuario) {
+            case 'ADMIN': return '/tabs/admin';
+            case 'BARBEIRO': return '/tabs/barbeiro';
+            case 'CLIENTE': return '/tabs/explorar';
+            default: return '/tabs/home';
+        }
     }
 }

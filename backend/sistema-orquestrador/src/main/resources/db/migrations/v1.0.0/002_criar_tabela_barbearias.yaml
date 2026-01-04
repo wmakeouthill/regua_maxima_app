@@ -1,0 +1,168 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela barbearias
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Tabela de barbearias com tema personalizável
+  # ========================================================
+
+  - changeSet:
+      id: 002-criar-tabela-barbearias
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: barbearias
+        - tableExists:
+            tableName: usuarios
+      comment: "Cria tabela de barbearias vinculada a um admin (dono)"
+      changes:
+        - createTable:
+            tableName: barbearias
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: slug
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: descricao
+                  type: VARCHAR(500)
+
+              # ========== Endereço ==========
+              - column:
+                  name: endereco
+                  type: VARCHAR(200)
+
+              - column:
+                  name: cidade
+                  type: VARCHAR(100)
+
+              - column:
+                  name: estado
+                  type: VARCHAR(50)
+
+              - column:
+                  name: cep
+                  type: VARCHAR(10)
+
+              # ========== Geolocalização ==========
+              - column:
+                  name: latitude
+                  type: DOUBLE
+
+              - column:
+                  name: longitude
+                  type: DOUBLE
+
+              # ========== Contato ==========
+              - column:
+                  name: telefone
+                  type: VARCHAR(20)
+
+              - column:
+                  name: whatsapp
+                  type: VARCHAR(20)
+
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+
+              - column:
+                  name: instagram
+                  type: VARCHAR(200)
+
+              # ========== Imagens ==========
+              - column:
+                  name: foto_url
+                  type: VARCHAR(500)
+
+              - column:
+                  name: banner_url
+                  type: VARCHAR(500)
+
+              - column:
+                  name: logo_url
+                  type: VARCHAR(500)
+
+              # ========== Tema (JSON) ==========
+              - column:
+                  name: tema_config
+                  type: JSON
+                  remarks: "Configuração de cores, fontes e dark mode"
+
+              # ========== Relacionamento ==========
+              - column:
+                  name: admin_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Status e Auditoria ==========
+              - column:
+                  name: ativo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: avaliacao_media
+                  type: DOUBLE
+                  defaultValueNumeric: 0.0
+
+              - column:
+                  name: total_avaliacoes
+                  type: INT
+                  defaultValueNumeric: 0
+
+              - column:
+                  name: data_criacao
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: DATETIME
+
+  - changeSet:
+      id: 002-criar-fk-barbearias-admin
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: FK_BARBEARIAS_USUARIOS
+        - tableExists:
+            tableName: barbearias
+        - tableExists:
+            tableName: usuarios
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: barbearias
+            baseColumnNames: admin_id
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            constraintName: FK_BARBEARIAS_USUARIOS
+            onDelete: RESTRICT
+            onUpdate: CASCADE

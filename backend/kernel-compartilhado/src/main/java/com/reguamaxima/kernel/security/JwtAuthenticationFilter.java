@@ -56,15 +56,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validar token
                 if (jwtService.isTokenValid(token, username)) {
 
-                    // Extrair roles e converter para authorities
+                    // Extrair roles e ID do usuário
                     List<String> roles = jwtService.extractRoles(token);
+                    Long userId = jwtService.extractUserId(token);
+
+                    // Converter para authorities
                     var authorities = roles != null
                             ? roles.stream().map(SimpleGrantedAuthority::new).toList()
                             : List.<SimpleGrantedAuthority>of();
 
-                    // Criar authentication token
+                    // Criar CustomUserDetails com ID do usuário
+                    CustomUserDetails userDetails = CustomUserDetails.fromJwt(userId, username, roles);
+
+                    // Criar authentication token com CustomUserDetails como principal
                     var authToken = new UsernamePasswordAuthenticationToken(
-                            username,
+                            userDetails,
                             null,
                             authorities);
 

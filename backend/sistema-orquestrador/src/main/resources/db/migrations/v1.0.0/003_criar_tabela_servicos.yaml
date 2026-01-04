@@ -1,0 +1,111 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela servicos
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Tabela de serviços oferecidos por barbearias
+  # ========================================================
+
+  - changeSet:
+      id: 003-criar-tabela-servicos
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: servicos
+        - tableExists:
+            tableName: barbearias
+      comment: "Cria tabela de serviços vinculada a uma barbearia"
+      changes:
+        - createTable:
+            tableName: servicos
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: nome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: descricao
+                  type: VARCHAR(300)
+
+              - column:
+                  name: duracao_minutos
+                  type: INT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: preco
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: icone
+                  type: VARCHAR(50)
+                  defaultValue: "cut-outline"
+
+              - column:
+                  name: ordem_exibicao
+                  type: INT
+                  defaultValueNumeric: 0
+
+              # ========== Relacionamento ==========
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Status e Auditoria ==========
+              - column:
+                  name: ativo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_criacao
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: DATETIME
+
+  - changeSet:
+      id: 003-criar-fk-servicos-barbearia
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: FK_SERVICOS_BARBEARIAS
+        - tableExists:
+            tableName: servicos
+        - tableExists:
+            tableName: barbearias
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: servicos
+            baseColumnNames: barbearia_id
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            constraintName: FK_SERVICOS_BARBEARIAS
+            onDelete: CASCADE
+            onUpdate: CASCADE

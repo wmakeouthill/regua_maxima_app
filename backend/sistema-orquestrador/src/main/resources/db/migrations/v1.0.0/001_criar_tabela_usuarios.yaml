@@ -1,0 +1,120 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela usuarios
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Tabela de usuários para autenticação
+  # ========================================================
+
+  - changeSet:
+      id: 001-criar-tabela-usuarios
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: usuarios
+      comment: "Cria tabela de usuários para autenticação multi-role"
+      changes:
+        - createTable:
+            tableName: usuarios
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: nome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: senha
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: telefone
+                  type: VARCHAR(20)
+
+              - column:
+                  name: role
+                  type: VARCHAR(20)
+                  defaultValue: "CLIENTE"
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: ativo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: email_verificado
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_criacao
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: DATETIME
+
+              - column:
+                  name: ultimo_login
+                  type: DATETIME
+
+  - changeSet:
+      id: 001-criar-indice-usuarios-email
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_USUARIOS_EMAIL
+      changes:
+        - createIndex:
+            indexName: IDX_USUARIOS_EMAIL
+            tableName: usuarios
+            columns:
+              - column:
+                  name: email
+
+  - changeSet:
+      id: 001-criar-indice-usuarios-role
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: IDX_USUARIOS_ROLE
+      changes:
+        - createIndex:
+            indexName: IDX_USUARIOS_ROLE
+            tableName: usuarios
+            columns:
+              - column:
+                  name: role

@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardTitle, IonCardContent, IonCardSubtitle,
@@ -13,8 +14,11 @@ import {
 import { AuthService } from '@core/auth/auth.service';
 
 /**
- * Página home com design Barbershop.
- * Exibe serviços, próximos agendamentos e promoções.
+ * Página home inteligente.
+ * Redireciona para área específica baseada no tipo de usuário.
+ * - ADMIN -> /tabs/admin
+ * - BARBEIRO -> /tabs/barbeiro  
+ * - CLIENTE -> Exibe home com serviços
  */
 @Component({
     selector: 'app-home',
@@ -44,6 +48,9 @@ import { AuthService } from '@core/auth/auth.service';
                     <div class="welcome-text">
                         <p>Bem-vindo de volta,</p>
                         <h2>{{ getPrimeiroNome() }}</h2>
+                        <ion-chip color="primary" class="role-chip">
+                            {{ getTipoUsuarioLabel() }}
+                        </ion-chip>
                     </div>
                 </div>
             </div>
@@ -266,7 +273,8 @@ import { AuthService } from '@core/auth/auth.service';
         }
     `]
 })
-export class HomePage {
+export class HomePage implements OnInit {
+    private router = inject(Router);
     authService = inject(AuthService);
 
     servicos = [
@@ -284,8 +292,23 @@ export class HomePage {
         });
     }
 
+    ngOnInit(): void {
+        // Redireciona Admin e Barbeiro para suas áreas específicas
+        const tipo = this.authService.getTipoUsuario();
+        if (tipo === 'ADMIN') {
+            this.router.navigate(['/tabs/admin'], { replaceUrl: true });
+        } else if (tipo === 'BARBEIRO') {
+            this.router.navigate(['/tabs/barbeiro'], { replaceUrl: true });
+        }
+        // Cliente permanece na home
+    }
+
     getPrimeiroNome(): string {
         const nome = this.authService.currentUser()?.nome;
         return nome ? nome.split(' ')[0] : 'Cliente';
+    }
+
+    getTipoUsuarioLabel(): string {
+        return this.authService.currentUser()?.tipoUsuarioDescricao ?? 'Usuário';
     }
 }

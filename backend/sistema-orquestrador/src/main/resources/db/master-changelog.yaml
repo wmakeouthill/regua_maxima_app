@@ -1,0 +1,28 @@
+databaseChangeLog:
+  # ========================================================
+  # Régua Máxima - Master Changelog
+  # ========================================================
+  # Ponto de entrada para todas as migrations do Liquibase.
+  # Organizado por versão para facilitar manutenção.
+  # ========================================================
+
+  # Versão 1.0.0 - Estrutura inicial
+  - include:
+      file: db/migrations/v1.0.0/001_criar_tabela_usuarios.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/002_criar_tabela_barbearias.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/003_criar_tabela_servicos.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/004_criar_indices_barbearias.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/005_criar_tabela_barbeiros.yaml
+      relativeToChangelogFile: false

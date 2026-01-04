@@ -38,10 +38,24 @@ public class JwtService {
     }
 
     /**
+     * Gera um access token para o usuário incluindo o ID.
+     */
+    public String generateAccessToken(Long userId, String username, List<String> roles) {
+        return generateToken(username, Map.of("roles", roles, "userId", userId), jwtExpiration);
+    }
+
+    /**
      * Gera um refresh token para o usuário.
      */
     public String generateRefreshToken(String username) {
         return generateToken(username, Map.of("type", "refresh"), refreshExpiration);
+    }
+
+    /**
+     * Gera um refresh token para o usuário incluindo o ID.
+     */
+    public String generateRefreshToken(Long userId, String username) {
+        return generateToken(username, Map.of("type", "refresh", "userId", userId), refreshExpiration);
     }
 
     /**
@@ -74,6 +88,22 @@ public class JwtService {
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);
         return (List<String>) claims.get("roles", List.class);
+    }
+
+    /**
+     * Extrai o ID do usuário do token.
+     */
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object userId = claims.get("userId");
+        if (userId instanceof Integer) {
+            return ((Integer) userId).longValue();
+        } else if (userId instanceof Long) {
+            return (Long) userId;
+        } else if (userId instanceof Number) {
+            return ((Number) userId).longValue();
+        }
+        return null;
     }
 
     /**
