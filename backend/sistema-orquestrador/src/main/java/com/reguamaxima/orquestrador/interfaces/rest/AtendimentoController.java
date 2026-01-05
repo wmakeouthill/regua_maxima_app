@@ -34,7 +34,7 @@ public class AtendimentoController {
     // ========== Endpoints do Barbeiro ==========
 
     @GetMapping("/minha-fila")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Buscar minha fila de atendimentos de hoje")
     public ResponseEntity<FilaBarbeiroDTO> minhaFila(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -48,7 +48,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/adicionar")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Adicionar cliente na fila")
     public ResponseEntity<AtendimentoDTO> adicionarNaFila(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -58,7 +58,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/iniciar-proximo")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Iniciar atendimento do próximo cliente da fila")
     public ResponseEntity<AtendimentoDTO> iniciarProximo(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -66,7 +66,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/{id}/iniciar")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Iniciar atendimento de um cliente específico")
     public ResponseEntity<AtendimentoDTO> iniciarAtendimento(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -75,7 +75,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/finalizar")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Finalizar atendimento atual")
     public ResponseEntity<AtendimentoDTO> finalizarAtendimento(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -83,7 +83,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/{id}/cancelar")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Cancelar atendimento")
     public ResponseEntity<AtendimentoDTO> cancelarAtendimento(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -94,7 +94,7 @@ public class AtendimentoController {
     }
 
     @PostMapping("/{id}/nao-compareceu")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Marcar cliente como não compareceu")
     public ResponseEntity<AtendimentoDTO> marcarNaoCompareceu(
             @AuthenticationPrincipal CustomUserDetails userDetails,

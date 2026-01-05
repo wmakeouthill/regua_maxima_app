@@ -84,6 +84,7 @@ export class AtendimentoService {
     readonly carregando = signal(false);
     readonly erro = signal<string | null>(null);
     readonly cadastroIncompleto = signal(false); // Admin sem barbearia vinculada
+    readonly semPermissao = signal(false); // Usuário não tem role necessária
 
     // Computed signals
     readonly atendimentoAtual = computed(() => this.filaAtual()?.atendimentoAtual ?? null);
@@ -102,6 +103,7 @@ export class AtendimentoService {
         this.carregando.set(true);
         this.erro.set(null);
         this.cadastroIncompleto.set(false);
+        this.semPermissao.set(false);
 
         return this.http.get<FilaBarbeiro>(`${this.baseUrl}/minha-fila`).pipe(
             tap(fila => {
@@ -113,6 +115,10 @@ export class AtendimentoService {
                 // 404 = usuário não tem barbearia configurada
                 if (err.status === 404) {
                     this.cadastroIncompleto.set(true);
+                    this.erro.set(null);
+                } else if (err.status === 403) {
+                    // 403 = usuário não tem permissão (role errada)
+                    this.semPermissao.set(true);
                     this.erro.set(null);
                 } else {
                     this.erro.set(err.error?.message ?? 'Erro ao buscar fila');

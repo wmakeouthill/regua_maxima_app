@@ -11,7 +11,8 @@ import { addIcons } from 'ionicons';
 import {
     personOutline, timeOutline, checkmarkCircleOutline,
     closeCircleOutline, cutOutline, refreshOutline,
-    alertCircleOutline, businessOutline, settingsOutline
+    alertCircleOutline, businessOutline, settingsOutline, swapHorizontalOutline,
+    personAddOutline
 } from 'ionicons/icons';
 import { AtendimentoService, Atendimento, StatusAtendimento } from '@core/services/atendimento.service';
 
@@ -42,6 +43,7 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
     readonly carregando = this.atendimentoService.carregando;
     readonly erro = this.atendimentoService.erro;
     readonly cadastroIncompleto = this.atendimentoService.cadastroIncompleto;
+    readonly semPermissao = this.atendimentoService.semPermissao;
 
     // Intervalos de polling
     private pollingInterval: ReturnType<typeof setInterval> | null = null;
@@ -75,7 +77,8 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
         addIcons({
             personOutline, timeOutline, checkmarkCircleOutline,
             closeCircleOutline, cutOutline, refreshOutline,
-            alertCircleOutline, businessOutline, settingsOutline
+            alertCircleOutline, businessOutline, settingsOutline, swapHorizontalOutline,
+            personAddOutline
         });
     }
 

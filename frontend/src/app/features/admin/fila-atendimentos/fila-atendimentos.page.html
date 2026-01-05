@@ -30,16 +30,29 @@
         </div>
     </div>
 
-    <!-- Cadastro Incompleto -->
-    @if (cadastroIncompleto()) {
+    <!-- Sem Permissão (role errada) -->
+    @if (semPermissao()) {
+        <ion-card class="empty-card info-card">
+            <ion-card-content>
+                <ion-icon name="swap-horizontal-outline" color="primary"></ion-icon>
+                <h4>Acesso como Dono de Barbearia</h4>
+                <p>Para gerenciar a fila, você precisa estar logado com o perfil de Dono de Barbearia ou Barbeiro.</p>
+                <ion-button fill="outline" routerLink="/selecionar-perfil">
+                    <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+                    Trocar Perfil
+                </ion-button>
+            </ion-card-content>
+        </ion-card>
+    } @else if (cadastroIncompleto()) {
+        <!-- Perfil de Barbeiro não configurado -->
         <ion-card class="empty-card warning-card">
             <ion-card-content>
-                <ion-icon name="business-outline" color="warning"></ion-icon>
-                <h4>Configure sua Barbearia</h4>
-                <p>Para gerenciar a fila de atendimentos, você precisa primeiro configurar sua barbearia.</p>
-                <ion-button fill="outline" routerLink="/tabs/admin/minha-barbearia">
-                    <ion-icon name="settings-outline" slot="start"></ion-icon>
-                    Configurar Barbearia
+                <ion-icon name="cut-outline" color="warning"></ion-icon>
+                <h4>Configure seu Perfil de Barbeiro</h4>
+                <p>Para gerenciar a fila de atendimentos, você precisa configurar seu perfil de barbeiro.</p>
+                <ion-button fill="outline" routerLink="/tabs/admin/meu-perfil-barbeiro">
+                    <ion-icon name="person-add-outline" slot="start"></ion-icon>
+                    Configurar Perfil
                 </ion-button>
             </ion-card-content>
         </ion-card>

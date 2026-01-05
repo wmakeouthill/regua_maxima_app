@@ -87,6 +87,10 @@ export const routes: Routes = [
                     {
                         path: 'estoque',
                         loadComponent: () => import('./features/admin/gestao-estoque/gestao-estoque.page').then(m => m.GestaoEstoquePage)
+                    },
+                    {
+                        path: 'meu-perfil-barbeiro',
+                        loadComponent: () => import('./features/barbeiro/perfil/meu-perfil.page').then(m => m.MeuPerfilBarbeiroPage)
                     }
                 ]
             },

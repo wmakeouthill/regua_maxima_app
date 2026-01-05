@@ -40,6 +40,9 @@ export class BarbeiroService {
     /** Admin sem barbearia configurada */
     private readonly _cadastroIncompleto = signal(false);
 
+    /** Sem permissão (role errada) */
+    private readonly _semPermissao = signal(false);
+
     // ========== Computed Signals ==========
 
     /** Meu perfil de barbeiro */
@@ -71,6 +74,9 @@ export class BarbeiroService {
 
     /** Cadastro incompleto (admin sem barbearia) */
     readonly cadastroIncompleto = this._cadastroIncompleto.asReadonly();
+
+    /** Sem permissão (role errada) */
+    readonly semPermissao = this._semPermissao.asReadonly();
 
     // ========== Endpoints do Barbeiro ==========
 
@@ -175,6 +181,7 @@ export class BarbeiroService {
     carregarMeusBarbeiros(): Observable<BarbeiroResumo[]> {
         this._carregando.set(true);
         this._cadastroIncompleto.set(false);
+        this._semPermissao.set(false);
 
         return this.http.get<BarbeiroResumo[]>(`${this.apiUrl}/admin/meus-barbeiros`).pipe(
             tap(barbeiros => {
@@ -186,6 +193,10 @@ export class BarbeiroService {
                 // 404 = admin não tem barbearia configurada
                 if (error.status === 404) {
                     this._cadastroIncompleto.set(true);
+                    this._meusBarbeiros.set([]);
+                } else if (error.status === 403) {
+                    // 403 = usuário não tem permissão (role errada)
+                    this._semPermissao.set(true);
                     this._meusBarbeiros.set([]);
                 }
                 return throwError(() => error);

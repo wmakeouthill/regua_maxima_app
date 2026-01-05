@@ -11,7 +11,7 @@ import {
 import { addIcons } from 'ionicons';
 import {
   peopleOutline, checkmarkCircleOutline, closeCircleOutline, trashOutline,
-  personOutline, starOutline, briefcaseOutline, timeOutline, businessOutline, settingsOutline
+  personOutline, starOutline, briefcaseOutline, timeOutline, businessOutline, settingsOutline, swapHorizontalOutline
 } from 'ionicons/icons';
 
 import { BarbeiroService } from '../../../core/services/barbeiro.service';
@@ -64,6 +64,17 @@ import { BarbeiroResumo } from '../../../core/models/barbeiro.model';
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
           <p>Carregando...</p>
+        </div>
+      } @else if (semPermissao()) {
+        <!-- Sem Permissão -->
+        <div class="empty-state info">
+          <ion-icon name="swap-horizontal-outline" color="primary"></ion-icon>
+          <h3>Acesso como Dono de Barbearia</h3>
+          <p>Para gerenciar barbeiros, você precisa estar logado com o perfil de Dono de Barbearia.</p>
+          <ion-button fill="outline" routerLink="/selecionar-perfil">
+            <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+            Trocar Perfil
+          </ion-button>
         </div>
       } @else if (cadastroIncompleto()) {
         <!-- Cadastro Incompleto -->
@@ -290,11 +301,12 @@ export class GerenciarBarbeirosPage implements OnInit {
   readonly barbeiros = signal<BarbeiroResumo[]>([]);
   readonly solicitacoes = signal<BarbeiroResumo[]>([]);
   readonly cadastroIncompleto = this.barbeiroService.cadastroIncompleto;
+  readonly semPermissao = this.barbeiroService.semPermissao;
 
   constructor() {
     addIcons({
       peopleOutline, checkmarkCircleOutline, closeCircleOutline, trashOutline,
-      personOutline, starOutline, briefcaseOutline, timeOutline, businessOutline, settingsOutline
+      personOutline, starOutline, briefcaseOutline, timeOutline, businessOutline, settingsOutline, swapHorizontalOutline
     });
   }
 
