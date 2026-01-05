@@ -1,0 +1,208 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008_criar_tabela_agendamentos
+      author: regua-maxima
+      comment: Cria tabela de agendamentos para sistema de reservas
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: agendamentos
+      changes:
+        - createTable:
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              
+              # Relacionamentos
+              - column:
+                  name: cliente_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: barbeiro_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: servico_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              
+              # Data e Hora
+              - column:
+                  name: data
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hora_inicio
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hora_fim
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duracao_minutos
+                  type: INT
+                  constraints:
+                    nullable: false
+              
+              # Valores
+              - column:
+                  name: preco
+                  type: DECIMAL(10,2)
+                  constraints:
+                    nullable: false
+              
+              # Status
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: 'PENDENTE'
+                  constraints:
+                    nullable: false
+              
+              # Observações
+              - column:
+                  name: observacoes_cliente
+                  type: VARCHAR(500)
+              - column:
+                  name: observacoes_barbeiro
+                  type: VARCHAR(500)
+              - column:
+                  name: motivo_cancelamento
+                  type: VARCHAR(300)
+              
+              # Auditoria
+              - column:
+                  name: data_criacao
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_atualizacao
+                  type: DATETIME
+              - column:
+                  name: data_confirmacao
+                  type: DATETIME
+              - column:
+                  name: data_inicio_atendimento
+                  type: DATETIME
+              - column:
+                  name: data_conclusao
+                  type: DATETIME
+              - column:
+                  name: data_cancelamento
+                  type: DATETIME
+
+  - changeSet:
+      id: 008_criar_indices_agendamentos
+      author: regua-maxima
+      comment: Cria índices para otimização de consultas de agendamentos
+      changes:
+        - createIndex:
+            indexName: idx_agendamento_cliente
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: cliente_id
+        - createIndex:
+            indexName: idx_agendamento_barbeiro
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: barbeiro_id
+        - createIndex:
+            indexName: idx_agendamento_barbearia
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: barbearia_id
+        - createIndex:
+            indexName: idx_agendamento_data
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: data
+        - createIndex:
+            indexName: idx_agendamento_status
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_agendamento_data_barbeiro
+            tableName: agendamentos
+            columns:
+              - column:
+                  name: data
+              - column:
+                  name: barbeiro_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 008_criar_fks_agendamentos
+      author: regua-maxima
+      comment: Cria foreign keys para agendamentos
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_agendamento_cliente
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_agendamento_barbeiro
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_agendamento_barbearia
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_agendamento_servico
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: agendamentos
+            baseColumnNames: cliente_id
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            constraintName: fk_agendamento_cliente
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: agendamentos
+            baseColumnNames: barbeiro_id
+            referencedTableName: barbeiros
+            referencedColumnNames: id
+            constraintName: fk_agendamento_barbeiro
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: agendamentos
+            baseColumnNames: barbearia_id
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            constraintName: fk_agendamento_barbearia
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: agendamentos
+            baseColumnNames: servico_id
+            referencedTableName: servicos
+            referencedColumnNames: id
+            constraintName: fk_agendamento_servico
+            onDelete: CASCADE

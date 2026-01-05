@@ -187,4 +187,30 @@ public class Barbearia {
     public boolean temTemaPersonalizado() {
         return this.temaConfig != null && !this.temaConfig.isBlank();
     }
+
+    /**
+     * Retorna o endereço completo formatado.
+     */
+    public String getEnderecoCompleto() {
+        StringBuilder sb = new StringBuilder();
+        if (endereco != null && !endereco.isBlank()) {
+            sb.append(endereco);
+        }
+        if (cidade != null && !cidade.isBlank()) {
+            if (!sb.isEmpty())
+                sb.append(", ");
+            sb.append(cidade);
+        }
+        if (estado != null && !estado.isBlank()) {
+            if (!sb.isEmpty())
+                sb.append(" - ");
+            sb.append(estado);
+        }
+        if (cep != null && !cep.isBlank()) {
+            if (!sb.isEmpty())
+                sb.append(" - ");
+            sb.append(cep);
+        }
+        return sb.toString();
+    }
 }
