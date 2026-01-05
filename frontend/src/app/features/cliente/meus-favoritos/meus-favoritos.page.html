@@ -1,0 +1,140 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="/cliente"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Meus Favoritos</ion-title>
+    </ion-toolbar>
+    <ion-toolbar>
+        <ion-segment [value]="segmentoAtivo()" (ionChange)="alterarSegmento($event)">
+            <ion-segment-button value="BARBEARIA">
+                <ion-icon name="storefront-outline"></ion-icon>
+                <ion-label>
+                    Barbearias
+                    @if (favoritoService.barbeariasFavoritas().length > 0) {
+                        <ion-badge color="primary">{{ favoritoService.barbeariasFavoritas().length }}</ion-badge>
+                    }
+                </ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="BARBEIRO">
+                <ion-icon name="person-outline"></ion-icon>
+                <ion-label>
+                    Barbeiros
+                    @if (favoritoService.barbeirosFavoritos().length > 0) {
+                        <ion-badge color="primary">{{ favoritoService.barbeirosFavoritos().length }}</ion-badge>
+                    }
+                </ion-label>
+            </ion-segment-button>
+        </ion-segment>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Skeleton Loading -->
+    @if (carregando()) {
+        <ion-list>
+            @for (i of [1, 2, 3, 4]; track i) {
+                <ion-item>
+                    <ion-avatar slot="start">
+                        <ion-skeleton-text [animated]="true"></ion-skeleton-text>
+                    </ion-avatar>
+                    <ion-label>
+                        <ion-skeleton-text [animated]="true" style="width: 60%;"></ion-skeleton-text>
+                        <ion-skeleton-text [animated]="true" style="width: 40%;"></ion-skeleton-text>
+                    </ion-label>
+                </ion-item>
+            }
+        </ion-list>
+    }
+
+    <!-- Barbearias Favoritas -->
+    @if (!carregando() && segmentoAtivo() === 'BARBEARIA') {
+        @if (favoritoService.barbeariasFavoritas().length === 0) {
+            <div class="vazio-container">
+                <ion-icon name="heart-outline"></ion-icon>
+                <h3>Nenhuma barbearia favorita</h3>
+                <p>Explore barbearias e adicione aos favoritos tocando no coração!</p>
+                <ion-button fill="outline" routerLink="/cliente/explorar">
+                    Explorar Barbearias
+                </ion-button>
+            </div>
+        } @else {
+            <ion-list lines="full">
+                @for (favorito of favoritoService.barbeariasFavoritas(); track favorito.id) {
+                    <ion-item button (click)="abrirFavorito(favorito)" detail>
+                        <ion-avatar slot="start">
+                            @if (favorito.foto) {
+                                <img [src]="favorito.foto" [alt]="favorito.nome">
+                            } @else {
+                                <div class="avatar-placeholder">
+                                    <ion-icon name="storefront-outline"></ion-icon>
+                                </div>
+                            }
+                        </ion-avatar>
+                        <ion-label>
+                            <h2>{{ favorito.nome }}</h2>
+                            @if (favorito.cidade && favorito.estado) {
+                                <p>
+                                    <ion-icon name="location-outline"></ion-icon>
+                                    {{ favorito.cidade }}, {{ favorito.estado }}
+                                </p>
+                            }
+                        </ion-label>
+                        <ion-button fill="clear" color="danger" slot="end" (click)="removerFavorito(favorito, $event)">
+                            <ion-icon name="heart" slot="icon-only"></ion-icon>
+                        </ion-button>
+                    </ion-item>
+                }
+            </ion-list>
+        }
+    }
+
+    <!-- Barbeiros Favoritos -->
+    @if (!carregando() && segmentoAtivo() === 'BARBEIRO') {
+        @if (favoritoService.barbeirosFavoritos().length === 0) {
+            <div class="vazio-container">
+                <ion-icon name="heart-outline"></ion-icon>
+                <h3>Nenhum barbeiro favorito</h3>
+                <p>Encontre barbeiros incríveis e adicione aos favoritos!</p>
+                <ion-button fill="outline" routerLink="/cliente/explorar">
+                    Explorar
+                </ion-button>
+            </div>
+        } @else {
+            <ion-list lines="full">
+                @for (favorito of favoritoService.barbeirosFavoritos(); track favorito.id) {
+                    <ion-item button (click)="abrirFavorito(favorito)" detail>
+                        <ion-avatar slot="start">
+                            @if (favorito.foto) {
+                                <img [src]="favorito.foto" [alt]="favorito.nome">
+                            } @else {
+                                <div class="avatar-placeholder">
+                                    <ion-icon name="person-outline"></ion-icon>
+                                </div>
+                            }
+                        </ion-avatar>
+                        <ion-label>
+                            <h2>{{ favorito.nome }}</h2>
+                            @if (favorito.especialidades) {
+                                <p>
+                                    <ion-icon name="cut-outline"></ion-icon>
+                                    {{ favorito.especialidades }}
+                                </p>
+                            }
+                            @if (favorito.anosExperiencia) {
+                                <p>{{ favorito.anosExperiencia }} anos de experiência</p>
+                            }
+                        </ion-label>
+                        <ion-button fill="clear" color="danger" slot="end" (click)="removerFavorito(favorito, $event)">
+                            <ion-icon name="heart" slot="icon-only"></ion-icon>
+                        </ion-button>
+                    </ion-item>
+                }
+            </ion-list>
+        }
+    }
+</ion-content>

@@ -1317,18 +1317,19 @@ export class DetalhesPage implements OnInit {
 
 #### Backend
 
-- [ ] Entidade `Avaliacao`
-- [ ] `AvaliacaoRepository`
-- [ ] Cálculo de média
-- [ ] `ServicoAvaliacao`
-- [ ] `AvaliacaoController`
+- [x] Entidade `Avaliacao`
+- [x] `AvaliacaoRepository`
+- [x] Cálculo de média
+- [x] `ServicoAvaliacao`
+- [x] `AvaliacaoController`
 
 #### Frontend
 
-- [ ] Componente de estrelas
-- [ ] Fluxo de avaliação pós-serviço
-- [ ] Exibição de avaliações
-- [ ] Média de avaliações nos cards
+- [x] Componente de estrelas (`StarRatingComponent`)
+- [x] Fluxo de avaliação pós-serviço (`AvaliarPage`)
+- [x] Exibição de avaliações (`AvaliacoesBarbeariaPage`)
+- [x] Média de avaliações nos cards (integrado na `BarbeariaPublicaPage`)
+- [x] Minhas avaliações (`MinhasAvaliacoesPage`)
 
 ---
 

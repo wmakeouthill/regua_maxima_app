@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
@@ -16,6 +17,7 @@ import {
 } from 'ionicons/icons';
 import { Geolocation } from '@capacitor/geolocation';
 import { BarbeariaService } from '@core/services/barbearia.service';
+import { FavoritoService } from '@core/services/favorito.service';
 import { BarbeariaResumo } from '@core/models/barbearia.model';
 
 /**
@@ -53,6 +55,8 @@ type TipoVisualizacao = 'lista' | 'mapa';
 })
 export class ExplorarBarbeariasPage implements OnInit {
     private readonly barbeariaService = inject(BarbeariaService);
+    private readonly favoritoService = inject(FavoritoService);
+    private readonly router = inject(Router);
 
     // Estado
     readonly carregando = signal(false);
@@ -89,6 +93,9 @@ export class ExplorarBarbeariasPage implements OnInit {
     }
 
     async ngOnInit(): Promise<void> {
+        // Carrega IDs dos favoritos para marcar corações
+        this.favoritoService.carregarIdsFavoritos().subscribe();
+
         await this.obterLocalizacaoReal();
         this.carregarBarbearias();
     }
@@ -149,7 +156,7 @@ export class ExplorarBarbeariasPage implements OnInit {
                             this.latitudeAtual, this.longitudeAtual,
                             b.latitude ?? 0, b.longitude ?? 0
                         ),
-                        favorito: false // TODO: Integrar com FavoritosService
+                        favorito: this.favoritoService.isBarbeariaFavorita(b.id)
                     }));
 
                     // Ordena por distância
@@ -220,21 +227,34 @@ export class ExplorarBarbeariasPage implements OnInit {
      */
     toggleFavorito(barbearia: BarbeariaCard, event: Event): void {
         event.stopPropagation();
+
+        // Atualiza UI imediatamente (optimistic update)
         this.barbearias.update(lista =>
             lista.map(b => b.id === barbearia.id
                 ? { ...b, favorito: !b.favorito }
                 : b
             )
         );
-        // TODO: Integrar com FavoritosService para persistir
+
+        // Persiste no backend
+        this.favoritoService.toggleBarbeariaFavorita(barbearia.id).subscribe({
+            error: () => {
+                // Reverte em caso de erro
+                this.barbearias.update(lista =>
+                    lista.map(b => b.id === barbearia.id
+                        ? { ...b, favorito: barbearia.favorito }
+                        : b
+                    )
+                );
+            }
+        });
     }
 
     /**
      * Abre detalhes da barbearia.
      */
     abrirBarbearia(barbearia: BarbeariaCard): void {
-        // TODO: Navegar para página de detalhes da barbearia
-        console.log('Abrindo barbearia:', barbearia.id, barbearia.nome);
+        this.router.navigate(['/barbearia', barbearia.slug]);
     }
 
     /**

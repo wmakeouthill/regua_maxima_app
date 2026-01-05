@@ -33,3 +33,15 @@ databaseChangeLog:
   - include:
       file: db/migrations/v1.0.0/007_criar_tabela_atendimentos.yaml
       relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/008_criar_tabela_agendamentos.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/009_criar_tabela_favoritos.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/010_criar_tabela_avaliacoes.yaml
+      relativeToChangelogFile: false

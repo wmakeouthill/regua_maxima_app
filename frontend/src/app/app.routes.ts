@@ -145,6 +145,22 @@ export const routes: Routes = [
                     {
                         path: 'agendamento/:id',
                         loadComponent: () => import('./features/cliente/detalhe-agendamento/detalhe-agendamento.page').then(m => m.DetalheAgendamentoPage)
+                    },
+                    {
+                        path: 'favoritos',
+                        loadComponent: () => import('./features/cliente/meus-favoritos/meus-favoritos.page').then(m => m.MeusFavoritosPage)
+                    },
+                    {
+                        path: 'novo-agendamento',
+                        loadComponent: () => import('./features/cliente/novo-agendamento/novo-agendamento.page').then(m => m.NovoAgendamentoPage)
+                    },
+                    {
+                        path: 'avaliar',
+                        loadComponent: () => import('./features/cliente/avaliar/avaliar.page').then(m => m.AvaliarPage)
+                    },
+                    {
+                        path: 'minhas-avaliacoes',
+                        loadComponent: () => import('./features/cliente/minhas-avaliacoes/minhas-avaliacoes.page').then(m => m.MinhasAvaliacoesPage)
                     }
                 ]
             },
@@ -156,6 +172,18 @@ export const routes: Routes = [
             }
         ]
     },
+
+    // ========== Rotas Públicas (Barbearia pelo slug) ==========
+    {
+        path: 'barbearia/:slug',
+        loadComponent: () => import('./features/cliente/barbearia-publica/barbearia-publica.page').then(m => m.BarbeariaPublicaPage)
+    },
+
+    {
+        path: 'barbearia/:slug/avaliacoes',
+        loadComponent: () => import('./features/cliente/avaliacoes-barbearia/avaliacoes-barbearia.page').then(m => m.AvaliacoesBarbeariaPage)
+    },
+
     {
         path: '**',
         redirectTo: 'tabs'

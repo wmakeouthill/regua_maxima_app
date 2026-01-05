@@ -1,0 +1,252 @@
+databaseChangeLog:
+  # ========================================================
+  # Régua Máxima - Migration: Criar tabela avaliacoes
+  # ========================================================
+  # Cria a tabela para armazenar avaliações dos clientes
+  # (barbearias, barbeiros e atendimentos).
+  # ========================================================
+
+  - changeSet:
+      id: 010-criar-tabela-avaliacoes
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: avaliacoes
+      changes:
+        - createTable:
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cliente_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipo
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: barbeiro_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: agendamento_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: nota
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comentario
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: resposta
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: data_resposta
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: anonima
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: visivel
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_criacao
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_atualizacao
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+
+  # Índice por cliente
+  - changeSet:
+      id: 010-indice-avaliacoes-cliente
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_avaliacoes_cliente
+      changes:
+        - createIndex:
+            indexName: idx_avaliacoes_cliente
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: cliente_id
+
+  # Índice por barbearia
+  - changeSet:
+      id: 010-indice-avaliacoes-barbearia
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_avaliacoes_barbearia
+      changes:
+        - createIndex:
+            indexName: idx_avaliacoes_barbearia
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: barbearia_id
+
+  # Índice por barbeiro
+  - changeSet:
+      id: 010-indice-avaliacoes-barbeiro
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_avaliacoes_barbeiro
+      changes:
+        - createIndex:
+            indexName: idx_avaliacoes_barbeiro
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: barbeiro_id
+
+  # Índice por agendamento
+  - changeSet:
+      id: 010-indice-avaliacoes-agendamento
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_avaliacoes_agendamento
+      changes:
+        - createIndex:
+            indexName: idx_avaliacoes_agendamento
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: agendamento_id
+
+  # Índice por nota (para estatísticas)
+  - changeSet:
+      id: 010-indice-avaliacoes-nota
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_avaliacoes_nota
+      changes:
+        - createIndex:
+            indexName: idx_avaliacoes_nota
+            tableName: avaliacoes
+            columns:
+              - column:
+                  name: nota
+
+  # Foreign Key: cliente
+  - changeSet:
+      id: 010-fk-avaliacoes-cliente
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_avaliacoes_cliente
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_avaliacoes_cliente
+            baseTableName: avaliacoes
+            baseColumnNames: cliente_id
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  # Foreign Key: barbearia
+  - changeSet:
+      id: 010-fk-avaliacoes-barbearia
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_avaliacoes_barbearia
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_avaliacoes_barbearia
+            baseTableName: avaliacoes
+            baseColumnNames: barbearia_id
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  # Foreign Key: barbeiro
+  - changeSet:
+      id: 010-fk-avaliacoes-barbeiro
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_avaliacoes_barbeiro
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_avaliacoes_barbeiro
+            baseTableName: avaliacoes
+            baseColumnNames: barbeiro_id
+            referencedTableName: barbeiros
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  # Foreign Key: agendamento
+  - changeSet:
+      id: 010-fk-avaliacoes-agendamento
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_avaliacoes_agendamento
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_avaliacoes_agendamento
+            baseTableName: avaliacoes
+            baseColumnNames: agendamento_id
+            referencedTableName: agendamentos
+            referencedColumnNames: id
+            onDelete: SET NULL

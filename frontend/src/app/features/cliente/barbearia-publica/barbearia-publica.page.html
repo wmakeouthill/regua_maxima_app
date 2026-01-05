@@ -1,0 +1,221 @@
+<ion-header>
+    <ion-toolbar [style.--background]="tema()?.corPrimaria || 'var(--ion-color-primary)'"
+                 [style.--color]="tema()?.corTexto || 'var(--ion-color-primary-contrast)'">
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="/cliente/explorar"></ion-back-button>
+        </ion-buttons>
+        <ion-title>{{ barbearia()?.nome || 'Barbearia' }}</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="toggleFavorito()">
+                <ion-icon [name]="isFavorita() ? 'heart' : 'heart-outline'" 
+                          [style.color]="isFavorita() ? 'var(--ion-color-danger)' : 'inherit'"></ion-icon>
+            </ion-button>
+            <ion-button (click)="compartilhar()">
+                <ion-icon name="share-outline"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Skeleton Loading -->
+    @if (carregando()) {
+        <div class="skeleton-container">
+            <ion-skeleton-text [animated]="true" style="width: 100%; height: 200px;"></ion-skeleton-text>
+            <div class="skeleton-content">
+                <ion-skeleton-text [animated]="true" style="width: 70%; height: 24px;"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 50%; height: 16px;"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 100%; height: 80px;"></ion-skeleton-text>
+            </div>
+        </div>
+    }
+
+    <!-- Erro -->
+    @if (erro()) {
+        <div class="erro-container">
+            <ion-icon name="alert-circle-outline" size="large"></ion-icon>
+            <p>{{ erro() }}</p>
+            <ion-button fill="outline" routerLink="/cliente/explorar">
+                Voltar para explorar
+            </ion-button>
+        </div>
+    }
+
+    <!-- Conteúdo da Barbearia -->
+    @if (!carregando() && !erro() && barbearia()) {
+        <!-- Banner/Foto -->
+        <div class="banner-container" 
+             [style.background-image]="'url(' + (barbearia()!.bannerUrl || barbearia()!.fotoUrl || 'assets/images/barbearia-default.jpg') + ')'"
+             [style.background-color]="tema()?.corPrimaria || 'var(--ion-color-primary)'">
+            @if (barbearia()!.logoUrl) {
+                <img class="logo" [src]="barbearia()!.logoUrl" [alt]="barbearia()!.nome">
+            }
+        </div>
+
+        <!-- Info Principal -->
+        <div class="info-container" [style.background-color]="tema()?.corFundo || 'var(--ion-background-color)'">
+            <h1 class="nome" [style.color]="tema()?.corTexto || 'var(--ion-text-color)'">
+                {{ barbearia()!.nome }}
+            </h1>
+
+            <!-- Avaliação -->
+            @if (barbearia()!.avaliacaoMedia && barbearia()!.avaliacaoMedia > 0) {
+                <div class="avaliacao">
+                    <ion-icon name="star" color="warning"></ion-icon>
+                    <span>{{ barbearia()!.avaliacaoMedia | number:'1.1-1' }}</span>
+                    <span class="total">({{ barbearia()!.totalAvaliacoes }} avaliações)</span>
+                </div>
+            }
+
+            <!-- Endereço -->
+            @if (enderecoCompleto()) {
+                <div class="endereco">
+                    <ion-icon name="location-outline"></ion-icon>
+                    <span>{{ enderecoCompleto() }}</span>
+                </div>
+            }
+
+            <!-- Descrição -->
+            @if (barbearia()!.descricao) {
+                <p class="descricao">{{ barbearia()!.descricao }}</p>
+            }
+
+            <!-- Ações Rápidas -->
+            <div class="acoes-rapidas">
+                @if (barbearia()!.telefone) {
+                    <ion-button fill="outline" size="small" (click)="ligar()">
+                        <ion-icon name="call-outline" slot="start"></ion-icon>
+                        Ligar
+                    </ion-button>
+                }
+                @if (barbearia()!.whatsapp) {
+                    <ion-button fill="outline" size="small" color="success" (click)="abrirWhatsApp()">
+                        <ion-icon name="logo-whatsapp" slot="start"></ion-icon>
+                        WhatsApp
+                    </ion-button>
+                }
+                @if (barbearia()!.instagram) {
+                    <ion-button fill="outline" size="small" color="tertiary" (click)="abrirInstagram()">
+                        <ion-icon name="logo-instagram" slot="start"></ion-icon>
+                        Instagram
+                    </ion-button>
+                }
+            </div>
+        </div>
+
+        <!-- Serviços -->
+        <div class="secao">
+            <h2>
+                <ion-icon name="cut-outline"></ion-icon>
+                Serviços
+            </h2>
+
+            @if (servicosAtivos().length === 0) {
+                <p class="vazio">Nenhum serviço disponível no momento.</p>
+            }
+
+            <ion-list lines="none">
+                @for (servico of servicosAtivos(); track servico.id) {
+                    <ion-card class="servico-card" (click)="agendarServico(servico)">
+                        <ion-card-content>
+                            <div class="servico-info">
+                                <h3>{{ servico.nome }}</h3>
+                                @if (servico.descricao) {
+                                    <p class="servico-descricao">{{ servico.descricao }}</p>
+                                }
+                                <div class="servico-detalhes">
+                                    <ion-chip color="primary" outline="true">
+                                        <ion-icon name="time-outline"></ion-icon>
+                                        {{ servico.duracaoMinutos }} min
+                                    </ion-chip>
+                                    <ion-chip color="success">
+                                        {{ servico.preco | currency:'BRL' }}
+                                    </ion-chip>
+                                </div>
+                            </div>
+                            <ion-icon name="chevron-forward-outline" class="arrow"></ion-icon>
+                        </ion-card-content>
+                    </ion-card>
+                }
+            </ion-list>
+        </div>
+
+        <!-- Avaliações -->
+        <div class="secao">
+            <h2>
+                <ion-icon name="chatbubbles-outline"></ion-icon>
+                Avaliações
+            </h2>
+
+            @if (resumoAvaliacoes()) {
+                <div class="resumo-avaliacoes" (click)="verTodasAvaliacoes()">
+                    <div class="nota-destaque">
+                        <span class="nota-valor">{{ resumoAvaliacoes()!.media | number:'1.1-1' }}</span>
+                        <app-star-rating
+                            [value]="resumoAvaliacoes()!.media"
+                            [readonly]="true"
+                            size="small"
+                        ></app-star-rating>
+                        <span class="total-avaliacoes">{{ resumoAvaliacoes()!.total }} avaliações</span>
+                    </div>
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </div>
+            }
+
+            @if (ultimasAvaliacoes().length > 0) {
+                <div class="lista-avaliacoes">
+                    @for (avaliacao of ultimasAvaliacoes(); track avaliacao.id) {
+                        <div class="avaliacao-item">
+                            <div class="avaliacao-header">
+                                <div class="cliente-info">
+                                    @if (avaliacao.clienteFoto) {
+                                        <img [src]="avaliacao.clienteFoto" alt="Cliente" class="cliente-foto" />
+                                    } @else {
+                                        <div class="cliente-foto placeholder">
+                                            <ion-icon name="person-outline"></ion-icon>
+                                        </div>
+                                    }
+                                    <div class="cliente-dados">
+                                        <span class="nome">{{ avaliacao.clienteNome }}</span>
+                                        <span class="data">{{ formatarData(avaliacao.dataCriacao) }}</span>
+                                    </div>
+                                </div>
+                                <app-star-rating
+                                    [value]="avaliacao.nota"
+                                    [readonly]="true"
+                                    size="small"
+                                ></app-star-rating>
+                            </div>
+                            @if (avaliacao.comentario) {
+                                <p class="comentario">{{ avaliacao.comentario }}</p>
+                            }
+                        </div>
+                    }
+
+                    @if (resumoAvaliacoes() && resumoAvaliacoes()!.total > 5) {
+                        <ion-button fill="clear" expand="block" (click)="verTodasAvaliacoes()">
+                            Ver todas as {{ resumoAvaliacoes()!.total }} avaliações
+                            <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+                        </ion-button>
+                    }
+                </div>
+            } @else {
+                <p class="vazio">Ainda não há avaliações para esta barbearia.</p>
+            }
+        </div>
+
+        <!-- Botão de Agendar -->
+        <div class="agendar-container">
+            <ion-button expand="block" 
+                        [style.--background]="tema()?.corPrimaria || 'var(--ion-color-primary)'"
+                        (click)="agendar()">
+                <ion-icon name="calendar-outline" slot="start"></ion-icon>
+                Agendar Horário
+            </ion-button>
+        </div>
+    }
+</ion-content>

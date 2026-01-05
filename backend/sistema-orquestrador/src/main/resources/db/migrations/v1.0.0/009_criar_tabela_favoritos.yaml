@@ -1,0 +1,205 @@
+databaseChangeLog:
+  # ========================================================
+  # Régua Máxima - Migration: Criar tabela favoritos
+  # ========================================================
+  # Cria a tabela para armazenar favoritos dos clientes
+  # (barbearias e barbeiros favoritados).
+  # ========================================================
+
+  - changeSet:
+      id: 009-criar-tabela-favoritos
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: favoritos
+      changes:
+        - createTable:
+            tableName: favoritos
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: usuario_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipo
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: barbeiro_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: data_criacao
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  # Índice por usuário
+  - changeSet:
+      id: 009-indice-favoritos-usuario
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_favoritos_usuario
+      changes:
+        - createIndex:
+            indexName: idx_favoritos_usuario
+            tableName: favoritos
+            columns:
+              - column:
+                  name: usuario_id
+
+  # Índice por tipo
+  - changeSet:
+      id: 009-indice-favoritos-tipo
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_favoritos_tipo
+      changes:
+        - createIndex:
+            indexName: idx_favoritos_tipo
+            tableName: favoritos
+            columns:
+              - column:
+                  name: tipo
+
+  # Índice por barbearia
+  - changeSet:
+      id: 009-indice-favoritos-barbearia
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_favoritos_barbearia
+      changes:
+        - createIndex:
+            indexName: idx_favoritos_barbearia
+            tableName: favoritos
+            columns:
+              - column:
+                  name: barbearia_id
+
+  # Índice por barbeiro
+  - changeSet:
+      id: 009-indice-favoritos-barbeiro
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: idx_favoritos_barbeiro
+      changes:
+        - createIndex:
+            indexName: idx_favoritos_barbeiro
+            tableName: favoritos
+            columns:
+              - column:
+                  name: barbeiro_id
+
+  # Unique constraint: usuário + barbearia
+  - changeSet:
+      id: 009-unique-favorito-usuario-barbearia
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: uk_favorito_usuario_barbearia
+      changes:
+        - addUniqueConstraint:
+            constraintName: uk_favorito_usuario_barbearia
+            tableName: favoritos
+            columnNames: usuario_id, barbearia_id
+
+  # Unique constraint: usuário + barbeiro
+  - changeSet:
+      id: 009-unique-favorito-usuario-barbeiro
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: uk_favorito_usuario_barbeiro
+      changes:
+        - addUniqueConstraint:
+            constraintName: uk_favorito_usuario_barbeiro
+            tableName: favoritos
+            columnNames: usuario_id, barbeiro_id
+
+  # Foreign Key: usuario
+  - changeSet:
+      id: 009-fk-favoritos-usuario
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_favoritos_usuario
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_favoritos_usuario
+            baseTableName: favoritos
+            baseColumnNames: usuario_id
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  # Foreign Key: barbearia
+  - changeSet:
+      id: 009-fk-favoritos-barbearia
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_favoritos_barbearia
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_favoritos_barbearia
+            baseTableName: favoritos
+            baseColumnNames: barbearia_id
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  # Foreign Key: barbeiro
+  - changeSet:
+      id: 009-fk-favoritos-barbeiro
+      author: regua-maxima
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_favoritos_barbeiro
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_favoritos_barbeiro
+            baseTableName: favoritos
+            baseColumnNames: barbeiro_id
+            referencedTableName: barbeiros
+            referencedColumnNames: id
+            onDelete: CASCADE
