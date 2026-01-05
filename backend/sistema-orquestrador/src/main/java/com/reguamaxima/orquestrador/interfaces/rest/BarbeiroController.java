@@ -60,10 +60,10 @@ public class BarbeiroController {
         return ResponseEntity.ok(servicoBarbeiro.listarBarbeirosDaBarbearia(barbeariaId, true));
     }
 
-    // ========== Endpoints do Barbeiro ==========
+    // ========== Endpoints do Barbeiro (também acessível por ADMIN) ==========
 
     @GetMapping("/meu-perfil")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Buscar meu perfil de barbeiro")
     public ResponseEntity<BarbeiroDTO> meuPerfil(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -71,7 +71,7 @@ public class BarbeiroController {
     }
 
     @GetMapping("/meu-perfil/existe")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Verificar se possui perfil de barbeiro")
     public ResponseEntity<Boolean> possuiPerfil(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -79,7 +79,7 @@ public class BarbeiroController {
     }
 
     @PostMapping("/meu-perfil")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Criar meu perfil de barbeiro")
     public ResponseEntity<BarbeiroDTO> criarPerfil(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -89,7 +89,7 @@ public class BarbeiroController {
     }
 
     @PutMapping("/meu-perfil")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Atualizar meu perfil de barbeiro")
     public ResponseEntity<BarbeiroDTO> atualizarPerfil(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -100,7 +100,7 @@ public class BarbeiroController {
     // ========== Vínculo com Barbearia ==========
 
     @PostMapping("/vinculo/solicitar/{barbeariaId}")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Solicitar vínculo com barbearia")
     public ResponseEntity<BarbeiroDTO> solicitarVinculo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -109,7 +109,7 @@ public class BarbeiroController {
     }
 
     @DeleteMapping("/vinculo/cancelar")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Cancelar solicitação de vínculo pendente")
     public ResponseEntity<BarbeiroDTO> cancelarSolicitacao(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -117,7 +117,7 @@ public class BarbeiroController {
     }
 
     @DeleteMapping("/vinculo")
-    @PreAuthorize("hasRole('BARBEIRO')")
+    @PreAuthorize("hasAnyRole('BARBEIRO', 'ADMIN')")
     @Operation(summary = "Desvincular-se da barbearia atual")
     public ResponseEntity<BarbeiroDTO> desvincular(
             @AuthenticationPrincipal CustomUserDetails userDetails) {

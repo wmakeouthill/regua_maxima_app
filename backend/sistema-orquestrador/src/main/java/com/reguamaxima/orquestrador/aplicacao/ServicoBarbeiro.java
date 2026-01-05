@@ -34,6 +34,8 @@ public class ServicoBarbeiro {
 
     /**
      * Cria perfil de barbeiro para o usuário logado.
+     * Se o usuário for dono de uma barbearia (ADMIN), automaticamente vincula
+     * o perfil de barbeiro à sua própria barbearia como APROVADO.
      */
     @Transactional
     public BarbeiroDTO criarPerfil(Long usuarioId, CriarBarbeiroDTO dto) {
@@ -60,6 +62,13 @@ public class ServicoBarbeiro {
                 .whatsapp(dto.whatsapp())
                 .instagram(dto.instagram())
                 .build();
+
+        // Se o usuário for dono de uma barbearia, vincula automaticamente como APROVADO
+        barbeariaRepository.findByAdminId(usuarioId).ifPresent(barbearia -> {
+            log.info("Usuário é dono da barbearia '{}', vinculando automaticamente como barbeiro", barbearia.getNome());
+            barbeiro.setBarbearia(barbearia);
+            barbeiro.setStatusVinculo(StatusVinculo.APROVADO);
+        });
 
         barbeiro = barbeiroRepository.save(barbeiro);
         log.info("Perfil de barbeiro criado com ID: {}", barbeiro.getId());
