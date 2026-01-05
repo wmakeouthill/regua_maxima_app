@@ -48,6 +48,9 @@ public class ServicoBarbeiro {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
+        // Verifica se o usuário é dono de uma barbearia para vincular automaticamente
+        Barbearia barbeariaDoAdmin = barbeariaRepository.findByAdminId(usuarioId).orElse(null);
+
         Barbeiro barbeiro = Barbeiro.builder()
                 .usuario(usuario)
                 .nomeProfissional(dto.nomeProfissional())
@@ -61,14 +64,14 @@ public class ServicoBarbeiro {
                 .telefone(dto.telefone())
                 .whatsapp(dto.whatsapp())
                 .instagram(dto.instagram())
+                .barbearia(barbeariaDoAdmin)
+                .statusVinculo(barbeariaDoAdmin != null ? StatusVinculo.APROVADO : StatusVinculo.SEM_VINCULO)
                 .build();
 
-        // Se o usuário for dono de uma barbearia, vincula automaticamente como APROVADO
-        barbeariaRepository.findByAdminId(usuarioId).ifPresent(barbearia -> {
-            log.info("Usuário é dono da barbearia '{}', vinculando automaticamente como barbeiro", barbearia.getNome());
-            barbeiro.setBarbearia(barbearia);
-            barbeiro.setStatusVinculo(StatusVinculo.APROVADO);
-        });
+        if (barbeariaDoAdmin != null) {
+            log.info("Usuário é dono da barbearia '{}', vinculando automaticamente como barbeiro",
+                    barbeariaDoAdmin.getNome());
+        }
 
         barbeiro = barbeiroRepository.save(barbeiro);
         log.info("Perfil de barbeiro criado com ID: {}", barbeiro.getId());
