@@ -37,6 +37,9 @@ export class BarbeiroService {
     /** Loading state */
     private readonly _carregando = signal(false);
 
+    /** Admin sem barbearia configurada */
+    private readonly _cadastroIncompleto = signal(false);
+
     // ========== Computed Signals ==========
 
     /** Meu perfil de barbeiro */
@@ -65,6 +68,9 @@ export class BarbeiroService {
 
     /** Estado de carregamento */
     readonly carregando = this._carregando.asReadonly();
+
+    /** Cadastro incompleto (admin sem barbearia) */
+    readonly cadastroIncompleto = this._cadastroIncompleto.asReadonly();
 
     // ========== Endpoints do Barbeiro ==========
 
@@ -168,6 +174,7 @@ export class BarbeiroService {
      */
     carregarMeusBarbeiros(): Observable<BarbeiroResumo[]> {
         this._carregando.set(true);
+        this._cadastroIncompleto.set(false);
 
         return this.http.get<BarbeiroResumo[]>(`${this.apiUrl}/admin/meus-barbeiros`).pipe(
             tap(barbeiros => {
@@ -176,6 +183,11 @@ export class BarbeiroService {
             }),
             catchError(error => {
                 this._carregando.set(false);
+                // 404 = admin não tem barbearia configurada
+                if (error.status === 404) {
+                    this._cadastroIncompleto.set(true);
+                    this._meusBarbeiros.set([]);
+                }
                 return throwError(() => error);
             })
         );
@@ -186,7 +198,14 @@ export class BarbeiroService {
      */
     carregarSolicitacoes(): Observable<BarbeiroResumo[]> {
         return this.http.get<BarbeiroResumo[]>(`${this.apiUrl}/admin/solicitacoes`).pipe(
-            tap(solicitacoes => this._solicitacoes.set(solicitacoes))
+            tap(solicitacoes => this._solicitacoes.set(solicitacoes)),
+            catchError(error => {
+                // 404 = admin não tem barbearia - retorna array vazio silenciosamente
+                if (error.status === 404) {
+                    this._solicitacoes.set([]);
+                }
+                return throwError(() => error);
+            })
         );
     }
 

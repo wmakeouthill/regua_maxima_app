@@ -83,6 +83,7 @@ export class AtendimentoService {
     readonly filaAtual = signal<FilaBarbeiro | null>(null);
     readonly carregando = signal(false);
     readonly erro = signal<string | null>(null);
+    readonly cadastroIncompleto = signal(false); // Admin sem barbearia vinculada
 
     // Computed signals
     readonly atendimentoAtual = computed(() => this.filaAtual()?.atendimentoAtual ?? null);
@@ -100,6 +101,7 @@ export class AtendimentoService {
     buscarMinhaFila(): Observable<FilaBarbeiro> {
         this.carregando.set(true);
         this.erro.set(null);
+        this.cadastroIncompleto.set(false);
 
         return this.http.get<FilaBarbeiro>(`${this.baseUrl}/minha-fila`).pipe(
             tap(fila => {
@@ -107,8 +109,14 @@ export class AtendimentoService {
                 this.carregando.set(false);
             }),
             catchError(err => {
-                this.erro.set(err.error?.message ?? 'Erro ao buscar fila');
                 this.carregando.set(false);
+                // 404 = usuário não tem barbearia configurada
+                if (err.status === 404) {
+                    this.cadastroIncompleto.set(true);
+                    this.erro.set(null);
+                } else {
+                    this.erro.set(err.error?.message ?? 'Erro ao buscar fila');
+                }
                 return throwError(() => err);
             })
         );

@@ -1,49 +1,19 @@
-import { Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardContent, IonIcon, IonButton, IonSpinner, IonRefresher,
     IonRefresherContent, IonButtons, IonChip, IonList,
     IonItem, IonLabel, IonAvatar, IonItemSliding, IonItemOptions,
-    IonItemOption
+    IonItemOption, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
     personOutline, timeOutline, checkmarkCircleOutline,
     closeCircleOutline, cutOutline, refreshOutline,
-    callOutline
+    alertCircleOutline, businessOutline, settingsOutline
 } from 'ionicons/icons';
-
-/**
- * Status possíveis de um atendimento na fila
- */
-type StatusAtendimento = 'AGUARDANDO' | 'EM_ATENDIMENTO' | 'CONCLUIDO' | 'CANCELADO';
-
-/**
- * Interface para um item da fila de atendimentos
- */
-interface AtendimentoFila {
-    id: string;
-    cliente: {
-        id: string;
-        nome: string;
-        telefone?: string;
-        fotoUrl?: string;
-    };
-    servico: {
-        id: string;
-        nome: string;
-        duracao: number;
-        preco: number;
-    };
-    barbeiro?: {
-        id: string;
-        nome: string;
-    };
-    horaChegada: Date;
-    status: StatusAtendimento;
-    posicao: number;
-}
+import { AtendimentoService, Atendimento, StatusAtendimento } from '@core/services/atendimento.service';
 
 /**
  * Página de Fila de Atendimentos do Admin.
@@ -53,7 +23,7 @@ interface AtendimentoFila {
     selector: 'app-fila-atendimentos',
     standalone: true,
     imports: [
-        DatePipe,
+        RouterLink,
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
         IonCardContent, IonIcon, IonButton, IonSpinner, IonRefresher,
         IonRefresherContent, IonButtons, IonChip, IonList,
@@ -65,14 +35,34 @@ interface AtendimentoFila {
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FilaAtendimentosPage implements OnInit, OnDestroy {
-    // Estado
-    readonly carregando = signal(false);
-    readonly atendimentos = signal<AtendimentoFila[]>([]);
+    private readonly atendimentoService = inject(AtendimentoService);
+    private readonly toastController = inject(ToastController);
+
+    // Estado do serviço
+    readonly carregando = this.atendimentoService.carregando;
+    readonly erro = this.atendimentoService.erro;
+    readonly cadastroIncompleto = this.atendimentoService.cadastroIncompleto;
 
     // Intervalos de polling
     private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
-    // Computed
+    // Computed - usando o serviço diretamente
+    readonly atendimentoAtual = this.atendimentoService.atendimentoAtual;
+    readonly filaEspera = this.atendimentoService.filaEspera;
+    readonly quantidadeAguardando = this.atendimentoService.totalAguardando;
+    readonly quantidadeHoje = this.atendimentoService.totalAtendidosHoje;
+    readonly emAtendimento = this.atendimentoService.emAtendimento;
+
+    // Atendimentos combinados para exibição
+    readonly atendimentos = computed(() => {
+        const atual = this.atendimentoAtual();
+        const fila = this.filaEspera();
+        if (atual) {
+            return [atual, ...fila];
+        }
+        return fila;
+    });
+
     readonly atendimentosAguardando = computed(() =>
         this.atendimentos().filter(a => a.status === 'AGUARDANDO')
     );
@@ -81,15 +71,11 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
         this.atendimentos().filter(a => a.status === 'EM_ATENDIMENTO')
     );
 
-    readonly quantidadeAguardando = computed(() => this.atendimentosAguardando().length);
-    readonly quantidadeEmAtendimento = computed(() => this.atendimentosEmAtendimento().length);
-    readonly quantidadeHoje = computed(() => this.atendimentos().length);
-
     constructor() {
         addIcons({
             personOutline, timeOutline, checkmarkCircleOutline,
             closeCircleOutline, cutOutline, refreshOutline,
-            callOutline
+            alertCircleOutline, businessOutline, settingsOutline
         });
     }
 
@@ -103,45 +89,14 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
     }
 
     carregarFila(): void {
-        this.carregando.set(true);
-
-        // TODO: Integrar com AtendimentoService real
-        setTimeout(() => {
-            this.atendimentos.set([
-                {
-                    id: '1',
-                    cliente: { id: 'c1', nome: 'João Silva', telefone: '11999998888' },
-                    servico: { id: 's1', nome: 'Corte Degradê', duracao: 30, preco: 45 },
-                    horaChegada: new Date(),
-                    status: 'AGUARDANDO',
-                    posicao: 1
-                },
-                {
-                    id: '2',
-                    cliente: { id: 'c2', nome: 'Pedro Santos' },
-                    servico: { id: 's2', nome: 'Barba Completa', duracao: 20, preco: 35 },
-                    horaChegada: new Date(Date.now() - 10 * 60000),
-                    status: 'AGUARDANDO',
-                    posicao: 2
-                },
-                {
-                    id: '3',
-                    cliente: { id: 'c3', nome: 'Carlos Oliveira', telefone: '11988887777' },
-                    servico: { id: 's1', nome: 'Corte Degradê', duracao: 30, preco: 45 },
-                    barbeiro: { id: 'b1', nome: 'Ricardo' },
-                    horaChegada: new Date(Date.now() - 25 * 60000),
-                    status: 'EM_ATENDIMENTO',
-                    posicao: 0
-                }
-            ]);
-            this.carregando.set(false);
-        }, 500);
+        // O serviço já trata o 404 e seta cadastroIncompleto
+        this.atendimentoService.buscarMinhaFila().subscribe();
     }
 
     iniciarPolling(): void {
         this.pollingInterval = setInterval(() => {
             this.carregarFila();
-        }, 5000);
+        }, 10000); // 10 segundos
     }
 
     pararPolling(): void {
@@ -152,10 +107,10 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
     }
 
     handleRefresh(event: CustomEvent): void {
-        this.carregarFila();
-        setTimeout(() => {
-            (event.target as HTMLIonRefresherElement).complete();
-        }, 500);
+        this.atendimentoService.buscarMinhaFila().subscribe({
+            next: () => (event.target as HTMLIonRefresherElement).complete(),
+            error: () => (event.target as HTMLIonRefresherElement).complete()
+        });
     }
 
     recarregar(): void {
@@ -167,7 +122,8 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
             'AGUARDANDO': 'warning',
             'EM_ATENDIMENTO': 'primary',
             'CONCLUIDO': 'success',
-            'CANCELADO': 'danger'
+            'CANCELADO': 'danger',
+            'NAO_COMPARECEU': 'medium'
         };
         return cores[status];
     }
@@ -177,41 +133,77 @@ export class FilaAtendimentosPage implements OnInit, OnDestroy {
             'AGUARDANDO': 'Aguardando',
             'EM_ATENDIMENTO': 'Atendendo',
             'CONCLUIDO': 'Concluído',
-            'CANCELADO': 'Cancelado'
+            'CANCELADO': 'Cancelado',
+            'NAO_COMPARECEU': 'Não Compareceu'
         };
         return labels[status];
     }
 
-    iniciarAtendimento(atendimento: AtendimentoFila): void {
-        // TODO: Chamar serviço para iniciar atendimento
-        console.log('Iniciar atendimento:', atendimento.id);
-        this.atendimentos.update(lista =>
-            lista.map(a => a.id === atendimento.id
-                ? { ...a, status: 'EM_ATENDIMENTO' as StatusAtendimento }
-                : a
-            )
-        );
+    async iniciarAtendimento(atendimento: Atendimento): Promise<void> {
+        this.atendimentoService.iniciarAtendimento(atendimento.id).subscribe({
+            next: async () => {
+                const toast = await this.toastController.create({
+                    message: `Atendimento de ${atendimento.cliente.nome} iniciado!`,
+                    duration: 2000,
+                    color: 'success'
+                });
+                await toast.present();
+            },
+            error: async (err) => {
+                const toast = await this.toastController.create({
+                    message: err.error?.message || 'Erro ao iniciar atendimento',
+                    duration: 3000,
+                    color: 'danger'
+                });
+                await toast.present();
+            }
+        });
     }
 
-    finalizarAtendimento(atendimento: AtendimentoFila): void {
-        // TODO: Chamar serviço para finalizar
-        console.log('Finalizar atendimento:', atendimento.id);
-        this.atendimentos.update(lista =>
-            lista.filter(a => a.id !== atendimento.id)
-        );
+    async finalizarAtendimento(atendimento: Atendimento): Promise<void> {
+        this.atendimentoService.finalizarAtendimento().subscribe({
+            next: async () => {
+                const toast = await this.toastController.create({
+                    message: 'Atendimento finalizado!',
+                    duration: 2000,
+                    color: 'success'
+                });
+                await toast.present();
+            },
+            error: async (err) => {
+                const toast = await this.toastController.create({
+                    message: err.error?.message || 'Erro ao finalizar atendimento',
+                    duration: 3000,
+                    color: 'danger'
+                });
+                await toast.present();
+            }
+        });
     }
 
-    cancelarAtendimento(atendimento: AtendimentoFila): void {
-        // TODO: Confirmar e chamar serviço
-        console.log('Cancelar atendimento:', atendimento.id);
-        this.atendimentos.update(lista =>
-            lista.filter(a => a.id !== atendimento.id)
-        );
+    async cancelarAtendimento(atendimento: Atendimento): Promise<void> {
+        this.atendimentoService.cancelarAtendimento(atendimento.id).subscribe({
+            next: async () => {
+                const toast = await this.toastController.create({
+                    message: 'Atendimento cancelado',
+                    duration: 2000,
+                    color: 'warning'
+                });
+                await toast.present();
+            },
+            error: async (err) => {
+                const toast = await this.toastController.create({
+                    message: err.error?.message || 'Erro ao cancelar atendimento',
+                    duration: 3000,
+                    color: 'danger'
+                });
+                await toast.present();
+            }
+        });
     }
 
-    ligarCliente(atendimento: AtendimentoFila): void {
-        if (atendimento.cliente.telefone) {
-            window.open(`tel:${atendimento.cliente.telefone}`, '_system');
-        }
+    ligarCliente(_atendimento: Atendimento): void {
+        // Cliente não tem telefone neste DTO resumido
+        // Implementar buscando dados completos do cliente se necessário
     }
 }
