@@ -8,10 +8,11 @@ import { environment } from '@env/environment';
  * Interface para resposta de autenticação.
  */
 export interface AuthResponse {
-    accessToken: string;
-    refreshToken: string;
+    accessToken: string | null;
+    refreshToken: string | null;
     expiresIn: number;
     usuario: Usuario;
+    requerSelecaoPerfil: boolean;
 }
 
 /**
@@ -37,28 +38,31 @@ export type TipoUsuario = 'ADMIN' | 'CLIENTE' | 'BARBEIRO';
 /**
  * Opções de tipo de usuário para seleção no registro.
  */
-export const TIPOS_USUARIO: { valor: TipoUsuario; label: string; descricao: string }[] = [
+export const TIPOS_USUARIO: { valor: TipoUsuario; label: string; descricao: string; icone: string }[] = [
     {
         valor: 'CLIENTE',
         label: 'Cliente',
-        descricao: 'Quero agendar serviços em barbearias'
+        descricao: 'Quero agendar serviços em barbearias',
+        icone: 'person-outline'
     },
     {
         valor: 'BARBEIRO',
         label: 'Barbeiro',
-        descricao: 'Sou profissional e quero oferecer meus serviços'
+        descricao: 'Sou profissional e quero oferecer meus serviços',
+        icone: 'briefcase-outline'
     },
     {
         valor: 'ADMIN',
         label: 'Dono de Barbearia',
-        descricao: 'Quero cadastrar e gerenciar minha barbearia'
+        descricao: 'Quero cadastrar e gerenciar minha barbearia',
+        icone: 'storefront-outline'
     }
 ];
 
 /**
  * Serviço de autenticação.
  * Gerencia login, logout, tokens e estado do usuário.
- * Usa Signals para reatividade (Zoneless compatible).
+ * Suporta múltiplas roles por usuário.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -68,15 +72,28 @@ export class AuthService {
     private _currentUser = signal<Usuario | null>(null);
     private _accessToken = signal<string | null>(null);
     private _isLoading = signal(true);
+    private _requerSelecaoPerfil = signal(false);
 
     // Computed states (readonly)
     currentUser = this._currentUser.asReadonly();
     isAuthenticated = computed(() => this._accessToken() !== null);
     isLoading = this._isLoading.asReadonly();
+    requerSelecaoPerfil = this._requerSelecaoPerfil.asReadonly();
+
+    // Computed: verifica se usuário tem múltiplas roles
+    possuiMultiplasRoles = computed(() => {
+        const roles = this._currentUser()?.roles ?? [];
+        return roles.length > 1;
+    });
+
+    // Computed: lista de roles disponíveis (sem prefixo ROLE_)
+    rolesDisponiveis = computed<TipoUsuario[]>(() => {
+        const roles = this._currentUser()?.roles ?? [];
+        return roles.map(r => r.replace('ROLE_', '') as TipoUsuario);
+    });
 
     /**
      * Inicializa o serviço carregando tokens salvos.
-     * Chamado no APP_INITIALIZER.
      */
     async initialize(): Promise<void> {
         try {
@@ -96,11 +113,40 @@ export class AuthService {
 
     /**
      * Realiza login do usuário.
+     * @param roleAtiva Role desejada (opcional para usuários com múltiplas roles)
      */
-    login(email: string, senha: string): Observable<AuthResponse> {
+    login(email: string, senha: string, roleAtiva?: TipoUsuario): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/login`,
-            { email, senha }
+            { email, senha, roleAtiva }
+        ).pipe(
+            switchMap(response => {
+                if (response.requerSelecaoPerfil) {
+                    // Usuário tem múltiplas roles, precisa selecionar
+                    this._requerSelecaoPerfil.set(true);
+                    this._currentUser.set(response.usuario);
+                    return of(response);
+                }
+
+                return from(this.saveTokens(response)).pipe(
+                    tap(() => {
+                        this._accessToken.set(response.accessToken);
+                        this._currentUser.set(response.usuario);
+                        this._requerSelecaoPerfil.set(false);
+                    }),
+                    switchMap(() => of(response))
+                );
+            })
+        );
+    }
+
+    /**
+     * Troca a role ativa (para usuários com múltiplas roles).
+     */
+    trocarRole(role: TipoUsuario): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${environment.apiUrl}/auth/trocar-role`,
+            { role }
         ).pipe(
             switchMap(response =>
                 from(this.saveTokens(response)).pipe(
@@ -115,12 +161,27 @@ export class AuthService {
     }
 
     /**
-     * Registra novo usuário com tipo específico.
-     * @param nome Nome do usuário
-     * @param email Email do usuário
-     * @param senha Senha do usuário
-     * @param tipoUsuario Tipo: ADMIN, CLIENTE ou BARBEIRO
-     * @param telefone Telefone opcional
+     * Adiciona nova role ao usuário.
+     */
+    adicionarRole(role: TipoUsuario): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${environment.apiUrl}/auth/adicionar-role`,
+            { role }
+        ).pipe(
+            switchMap(response =>
+                from(this.saveTokens(response)).pipe(
+                    tap(() => {
+                        this._accessToken.set(response.accessToken);
+                        this._currentUser.set(response.usuario);
+                    }),
+                    switchMap(() => of(response))
+                )
+            )
+        );
+    }
+
+    /**
+     * Registra novo usuário ou adiciona role a usuário existente.
      */
     registrar(
         nome: string,
@@ -146,14 +207,14 @@ export class AuthService {
     }
 
     /**
-     * Retorna o tipo de usuário atual.
+     * Retorna o tipo de usuário atual (role ativa).
      */
     getTipoUsuario(): TipoUsuario | null {
         return this._currentUser()?.tipoUsuario ?? null;
     }
 
     /**
-     * Verifica se o usuário é Admin (Dono de Barbearia).
+     * Verifica se o usuário é Admin.
      */
     isAdmin(): boolean {
         return this.getTipoUsuario() === 'ADMIN';
@@ -175,37 +236,41 @@ export class AuthService {
 
     /**
      * Realiza login com Google OAuth.
-     * @param idToken Token JWT retornado pelo Google Sign-In
      */
-    loginGoogle(idToken: string): Observable<AuthResponse> {
+    loginGoogle(idToken: string, roleAtiva?: TipoUsuario): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/login/google`,
-            { idToken }
+            { idToken, roleAtiva }
         ).pipe(
-            switchMap(response =>
-                from(this.saveTokens(response)).pipe(
+            switchMap(response => {
+                if (response.requerSelecaoPerfil) {
+                    this._requerSelecaoPerfil.set(true);
+                    this._currentUser.set(response.usuario);
+                    return of(response);
+                }
+
+                return from(this.saveTokens(response)).pipe(
                     tap(() => {
                         this._accessToken.set(response.accessToken);
                         this._currentUser.set(response.usuario);
                     }),
                     switchMap(() => of(response))
-                )
-            )
+                );
+            })
         );
     }
 
     /**
-     * Renova o access token usando refresh token.
+     * Renova o access token.
      */
     async refresh(): Promise<AuthResponse | null> {
+        const { value: refreshToken } = await Preferences.get({ key: 'refresh_token' });
+
+        if (!refreshToken) {
+            return null;
+        }
+
         try {
-            const { value: refreshToken } = await Preferences.get({ key: 'refresh_token' });
-
-            if (!refreshToken) {
-                await this.logout();
-                return null;
-            }
-
             const response = await this.http.post<AuthResponse>(
                 `${environment.apiUrl}/auth/refresh`,
                 { refreshToken }
@@ -217,16 +282,15 @@ export class AuthService {
                 this._currentUser.set(response.usuario);
             }
 
-            return response || null;
+            return response ?? null;
         } catch (error) {
-            console.error('Erro ao renovar token:', error);
             await this.logout();
             return null;
         }
     }
 
     /**
-     * Realiza logout do usuário.
+     * Realiza logout.
      */
     async logout(): Promise<void> {
         await Promise.all([
@@ -237,6 +301,7 @@ export class AuthService {
 
         this._accessToken.set(null);
         this._currentUser.set(null);
+        this._requerSelecaoPerfil.set(false);
     }
 
     /**
@@ -257,17 +322,20 @@ export class AuthService {
      * Verifica se usuário tem uma role específica.
      */
     hasRole(role: string): boolean {
-        return this.getUserRoles().includes(role);
+        return this.getUserRoles().includes(role) ||
+            this.getUserRoles().includes(`ROLE_${role}`);
     }
 
     /**
      * Salva tokens no storage.
      */
     private async saveTokens(response: AuthResponse): Promise<void> {
-        await Promise.all([
-            Preferences.set({ key: 'access_token', value: response.accessToken }),
-            Preferences.set({ key: 'refresh_token', value: response.refreshToken }),
-            Preferences.set({ key: 'user', value: JSON.stringify(response.usuario) })
-        ]);
+        if (response.accessToken && response.refreshToken) {
+            await Promise.all([
+                Preferences.set({ key: 'access_token', value: response.accessToken }),
+                Preferences.set({ key: 'refresh_token', value: response.refreshToken }),
+                Preferences.set({ key: 'user', value: JSON.stringify(response.usuario) })
+            ]);
+        }
     }
 }

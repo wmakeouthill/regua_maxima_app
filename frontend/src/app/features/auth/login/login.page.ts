@@ -3,18 +3,17 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import {
     IonContent, IonItem, IonInput, IonButton, IonSpinner,
     IonInputPasswordToggle, IonIcon, IonList, IonChip,
-    IonHeader, IonToolbar, IonButtons, IonBackButton
+    IonHeader, IonToolbar, IonButtons, IonBackButton, IonCard, IonCardContent
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { cutOutline, personOutline, storefrontOutline, briefcaseOutline } from 'ionicons/icons';
+import { cutOutline, personOutline, storefrontOutline, briefcaseOutline, chevronForwardOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
-import { AuthService, TipoUsuario } from '@core/auth/auth.service';
+import { AuthService, TipoUsuario, TIPOS_USUARIO } from '@core/auth/auth.service';
 import { GoogleSignInService } from '@core/auth/google-signin.service';
 
 /**
- * Página de login com design Barbershop.
- * Suporta login tradicional e Google OAuth.
+ * Página de login com seleção de perfil para usuários com múltiplas roles.
  */
 @Component({
     selector: 'app-login',
@@ -22,7 +21,8 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
     imports: [
         IonContent, IonItem, IonInput, IonButton, IonSpinner,
         IonInputPasswordToggle, IonIcon, IonList, IonChip,
-        IonHeader, IonToolbar, IonButtons, IonBackButton, FormsModule, RouterLink
+        IonHeader, IonToolbar, IonButtons, IonBackButton,
+        IonCard, IonCardContent, FormsModule, RouterLink
     ],
     templateUrl: './login.page.html',
     styleUrl: './login.page.scss'
@@ -46,12 +46,16 @@ export class LoginPage implements OnInit, OnDestroy {
     carregando = signal(false);
     tipoUsuarioSelecionado = signal<TipoUsuario | null>(null);
 
+    // Seleção de perfil para múltiplas roles
+    mostrarSelecaoPerfil = signal(false);
+    rolesDisponiveis = signal<TipoUsuario[]>([]);
+    tiposUsuario = TIPOS_USUARIO;
+
     constructor() {
-        addIcons({ cutOutline, personOutline, storefrontOutline, briefcaseOutline });
+        addIcons({ cutOutline, personOutline, storefrontOutline, briefcaseOutline, chevronForwardOutline });
     }
 
     async ngOnInit(): Promise<void> {
-        // Lê o tipo de usuário da query string
         this.route.queryParams.subscribe(params => {
             const tipo = params['tipo'] as TipoUsuario;
             if (tipo && ['ADMIN', 'BARBEIRO', 'CLIENTE'].includes(tipo)) {
@@ -59,7 +63,6 @@ export class LoginPage implements OnInit, OnDestroy {
             }
         });
 
-        // Inicializa Google OAuth
         try {
             await this.googleSignIn.initialize();
             if (this.googleSignIn.isConfigured) {
@@ -71,9 +74,6 @@ export class LoginPage implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Retorna o ícone correspondente ao tipo de perfil selecionado
-     */
     getIconePerfil(): string {
         const icones: Record<TipoUsuario, string> = {
             ADMIN: 'storefront-outline',
@@ -83,9 +83,6 @@ export class LoginPage implements OnInit, OnDestroy {
         return icones[this.tipoUsuarioSelecionado()!] || 'person-outline';
     }
 
-    /**
-     * Retorna o label do tipo de perfil selecionado
-     */
     getLabelPerfil(): string {
         const labels: Record<TipoUsuario, string> = {
             ADMIN: 'Dono de Barbearia',
@@ -95,9 +92,6 @@ export class LoginPage implements OnInit, OnDestroy {
         return labels[this.tipoUsuarioSelecionado()!] || '';
     }
 
-    /**
-     * Retorna a cor do chip baseado no tipo de perfil
-     */
     getCorPerfil(): string {
         const cores: Record<TipoUsuario, string> = {
             ADMIN: 'secondary',
@@ -107,9 +101,10 @@ export class LoginPage implements OnInit, OnDestroy {
         return cores[this.tipoUsuarioSelecionado()!] || 'primary';
     }
 
-    /**
-     * Navega para a página de registro passando o tipo de usuário
-     */
+    getInfoTipo(tipo: TipoUsuario) {
+        return this.tiposUsuario.find(t => t.valor === tipo);
+    }
+
     irParaRegistro(): void {
         const tipo = this.tipoUsuarioSelecionado();
         if (tipo) {
@@ -129,16 +124,11 @@ export class LoginPage implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Tenta renderizar o botão do Google com retry.
-     * O ViewChild pode não estar disponível imediatamente devido ao @if.
-     */
     private tentarRenderizarBotaoGoogle(): void {
         if (this.googleButtonRendered() || this.renderAttempts >= this.MAX_RENDER_ATTEMPTS) {
             return;
         }
 
-        // Usa setTimeout para aguardar o próximo ciclo de detecção de mudanças
         setTimeout(() => {
             const element = this.googleButtonRef?.nativeElement;
 
@@ -159,7 +149,6 @@ export class LoginPage implements OnInit, OnDestroy {
                     this.tentarRenderizarBotaoGoogle();
                 }
             } else {
-                // Elemento ainda não disponível, tenta novamente
                 this.renderAttempts++;
                 this.tentarRenderizarBotaoGoogle();
             }
@@ -171,8 +160,14 @@ export class LoginPage implements OnInit, OnDestroy {
         this.carregando.set(true);
 
         this.authService.loginGoogle(idToken).subscribe({
-            next: () => {
-                this.router.navigate(['/tabs/home']);
+            next: (response) => {
+                if (response.requerSelecaoPerfil) {
+                    this.mostrarSelecaoPerfil.set(true);
+                    this.rolesDisponiveis.set(this.authService.rolesDisponiveis());
+                    this.carregando.set(false);
+                } else {
+                    this.redirecionarPorTipo();
+                }
             },
             error: (err: { error?: { message?: string } }) => {
                 this.carregando.set(false);
@@ -191,8 +186,15 @@ export class LoginPage implements OnInit, OnDestroy {
         this.carregando.set(true);
 
         this.authService.login(this.email, this.senha).subscribe({
-            next: () => {
-                this.router.navigate(['/tabs/home']);
+            next: (response) => {
+                if (response.requerSelecaoPerfil) {
+                    // Usuário tem múltiplas roles, mostra seleção
+                    this.mostrarSelecaoPerfil.set(true);
+                    this.rolesDisponiveis.set(this.authService.rolesDisponiveis());
+                    this.carregando.set(false);
+                } else {
+                    this.redirecionarPorTipo();
+                }
             },
             error: (err: { error?: { message?: string } }) => {
                 this.carregando.set(false);
@@ -200,5 +202,40 @@ export class LoginPage implements OnInit, OnDestroy {
             }
         });
     }
-}
 
+    /**
+     * Seleciona um perfil quando usuário tem múltiplas roles.
+     */
+    selecionarPerfil(role: TipoUsuario): void {
+        this.carregando.set(true);
+
+        // Faz login novamente com a role selecionada
+        this.authService.login(this.email, this.senha, role).subscribe({
+            next: () => {
+                this.mostrarSelecaoPerfil.set(false);
+                this.redirecionarPorTipo();
+            },
+            error: (err: { error?: { message?: string } }) => {
+                this.carregando.set(false);
+                this.erro.set(err.error?.message || 'Erro ao selecionar perfil');
+            }
+        });
+    }
+
+    private redirecionarPorTipo(): void {
+        const tipo = this.authService.getTipoUsuario();
+
+        switch (tipo) {
+            case 'ADMIN':
+                this.router.navigate(['/tabs/admin/dashboard'], { replaceUrl: true });
+                break;
+            case 'BARBEIRO':
+                this.router.navigate(['/tabs/barbeiro/fila'], { replaceUrl: true });
+                break;
+            case 'CLIENTE':
+            default:
+                this.router.navigate(['/tabs/cliente/explorar'], { replaceUrl: true });
+                break;
+        }
+    }
+}

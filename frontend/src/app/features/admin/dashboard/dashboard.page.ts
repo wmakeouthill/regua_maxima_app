@@ -1,322 +1,159 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-    IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle,
-    IonIcon, IonButton, IonGrid, IonRow, IonCol, IonBadge,
-    IonList, IonItem, IonLabel, IonButtons, IonSpinner
+    IonCardContent, IonIcon, IonButton, IonGrid, IonRow, IonCol, IonBadge,
+    IonButtons, IonSpinner
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
+import { addIcons } from 'ionicons';;
 import {
     storefrontOutline, calendarOutline, peopleOutline,
     cashOutline, settingsOutline, colorPaletteOutline,
     cutOutline, statsChartOutline, notificationsOutline,
-    starOutline, chevronForwardOutline
+    starOutline, chevronForwardOutline, cubeOutline,
+    timeOutline, personOutline, listOutline, walletOutline
 } from 'ionicons/icons';
 import { AuthService } from '@core/auth/auth.service';
 import { BarbeariaService } from '../../../core/services/barbearia.service';
 
 /**
+ * Interface para módulo do dashboard
+ */
+interface ModuloDashboard {
+    id: string;
+    nome: string;
+    descricao: string;
+    icone: string;
+    rota: string;
+    cor: 'primary' | 'secondary' | 'tertiary' | 'success' | 'warning' | 'danger';
+    badge?: number;
+    disponivel: boolean;
+}
+
+/**
  * Dashboard do Admin (Dono de Barbearia).
- * Visão geral de gestão da barbearia.
+ * Design premium barbershop com módulos em cards.
  */
 @Component({
     selector: 'app-admin-dashboard',
     standalone: true,
     imports: [
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-        IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle,
-        IonIcon, IonButton, IonGrid, IonRow, IonCol, IonBadge,
-        IonList, IonItem, IonLabel, IonButtons, IonSpinner,
+        IonCardContent, IonIcon, IonButton, IonGrid, IonRow, IonCol, IonBadge,
+        IonButtons, IonSpinner,
         DecimalPipe
     ],
-    template: `
-        <ion-header>
-            <ion-toolbar color="primary">
-                <ion-title>Painel Admin</ion-title>
-                <ion-buttons slot="end">
-                    <ion-button>
-                        <ion-icon name="notifications-outline" slot="icon-only"></ion-icon>
-                    </ion-button>
-                </ion-buttons>
-            </ion-toolbar>
-        </ion-header>
-
-        <ion-content>
-            @if (carregando()) {
-                <div class="loading-container">
-                    <ion-spinner name="crescent"></ion-spinner>
-                    <p>Carregando...</p>
-                </div>
-            } @else if (!possuiBarbearia()) {
-                <!-- Estado: Sem Barbearia -->
-                <div class="welcome-section">
-                    <div class="welcome-content">
-                        <h1>Olá, {{ getPrimeiroNome() }}!</h1>
-                        <p>Vamos configurar sua barbearia</p>
-                    </div>
-                </div>
-
-                <ion-card class="info-card">
-                    <ion-card-header>
-                        <ion-card-subtitle>Primeiro passo</ion-card-subtitle>
-                        <ion-card-title>Cadastre sua Barbearia</ion-card-title>
-                    </ion-card-header>
-                    <ion-card-content>
-                        <p>Complete o cadastro da sua barbearia para começar a receber agendamentos.</p>
-                        <ion-button expand="block" (click)="navegarPara('/tabs/admin/barbearia')">
-                            <ion-icon name="storefront-outline" slot="start"></ion-icon>
-                            Cadastrar Barbearia
-                        </ion-button>
-                    </ion-card-content>
-                </ion-card>
-            } @else {
-                <!-- Estado: Com Barbearia -->
-                <div class="welcome-section">
-                    <div class="welcome-content">
-                        <h1>{{ barbearia()?.nome }}</h1>
-                        <p>
-                            @if (barbearia()?.ativo) {
-                                <ion-badge color="success">Ativa</ion-badge>
-                            } @else {
-                                <ion-badge color="warning">Inativa</ion-badge>
-                            }
-                            @if ((barbearia()?.avaliacaoMedia ?? 0) > 0) {
-                                <span class="rating">
-                                    <ion-icon name="star-outline"></ion-icon>
-                                    {{ barbearia()?.avaliacaoMedia | number:'1.1-1' }}
-                                    ({{ barbearia()?.totalAvaliacoes }})
-                                </span>
-                            }
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Stats Cards -->
-                <ion-grid>
-                    <ion-row>
-                        <ion-col size="6">
-                            <ion-card class="stat-card">
-                                <ion-card-content>
-                                    <ion-icon name="calendar-outline" color="primary"></ion-icon>
-                                    <div class="stat-value">0</div>
-                                    <div class="stat-label">Agendamentos Hoje</div>
-                                </ion-card-content>
-                            </ion-card>
-                        </ion-col>
-                        <ion-col size="6">
-                            <ion-card class="stat-card">
-                                <ion-card-content>
-                                    <ion-icon name="people-outline" color="secondary"></ion-icon>
-                                    <div class="stat-value">0</div>
-                                    <div class="stat-label">Barbeiros</div>
-                                </ion-card-content>
-                            </ion-card>
-                        </ion-col>
-                        <ion-col size="6">
-                            <ion-card class="stat-card">
-                                <ion-card-content>
-                                    <ion-icon name="cut-outline" color="tertiary"></ion-icon>
-                                    <div class="stat-value">{{ totalServicos() }}</div>
-                                    <div class="stat-label">Serviços</div>
-                                </ion-card-content>
-                            </ion-card>
-                        </ion-col>
-                        <ion-col size="6">
-                            <ion-card class="stat-card">
-                                <ion-card-content>
-                                    <ion-icon name="cash-outline" color="success"></ion-icon>
-                                    <div class="stat-value">R$ 0</div>
-                                    <div class="stat-label">Faturamento</div>
-                                </ion-card-content>
-                            </ion-card>
-                        </ion-col>
-                    </ion-row>
-                </ion-grid>
-
-                <!-- Menu de Gestão -->
-                <div class="section-header">
-                    <h3>Gestão</h3>
-                </div>
-
-                <ion-list>
-                    <ion-item button detail (click)="navegarPara('/tabs/admin/barbearia')">
-                        <ion-icon name="storefront-outline" slot="start" color="primary"></ion-icon>
-                        <ion-label>
-                            <h2>Minha Barbearia</h2>
-                            <p>Dados, endereço e informações</p>
-                        </ion-label>
-                    </ion-item>
-
-                    <ion-item button detail (click)="navegarPara('/tabs/admin/tema')">
-                        <ion-icon name="color-palette-outline" slot="start" color="secondary"></ion-icon>
-                        <ion-label>
-                            <h2>Personalizar Tema</h2>
-                            <p>Cores, logo e banner</p>
-                        </ion-label>
-                    </ion-item>
-
-                    <ion-item button detail (click)="navegarPara('/tabs/admin/servicos')">
-                        <ion-icon name="cut-outline" slot="start" color="tertiary"></ion-icon>
-                        <ion-label>
-                            <h2>Serviços</h2>
-                            <p>Gerenciar serviços oferecidos</p>
-                        </ion-label>
-                        @if (totalServicos() > 0) {
-                            <ion-badge slot="end">{{ totalServicos() }}</ion-badge>
-                        }
-                    </ion-item>
-
-                    <ion-item button detail (click)="navegarPara('/tabs/admin/barbeiros')">
-                        <ion-icon name="people-outline" slot="start" color="warning"></ion-icon>
-                        <ion-label>
-                            <h2>Barbeiros</h2>
-                            <p>Gerenciar equipe</p>
-                        </ion-label>
-                    </ion-item>
-
-                    <ion-item button detail>
-                        <ion-icon name="calendar-outline" slot="start" color="success"></ion-icon>
-                        <ion-label>
-                            <h2>Agendamentos</h2>
-                            <p>Ver todos os agendamentos</p>
-                        </ion-label>
-                    </ion-item>
-
-                    <ion-item button detail>
-                        <ion-icon name="stats-chart-outline" slot="start" color="dark"></ion-icon>
-                        <ion-label>
-                            <h2>Relatórios</h2>
-                            <p>Estatísticas e métricas</p>
-                        </ion-label>
-                    </ion-item>
-                </ion-list>
-            }
-        </ion-content>
-    `,
-    styles: [`
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 50vh;
-            
-            p {
-                margin-top: 16px;
-                color: var(--ion-color-medium);
-            }
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-            padding: 24px 16px;
-            color: white;
-        }
-
-        .welcome-content h1 {
-            margin: 0 0 4px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .welcome-content p {
-            margin: 0;
-            opacity: 0.9;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .welcome-content .rating {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-card {
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .stat-card ion-icon {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--ion-color-dark);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--ion-color-medium);
-        }
-
-        .section-header {
-            padding: 16px 16px 8px;
-        }
-
-        .section-header h3 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-        }
-
-        ion-list {
-            padding: 0 16px;
-        }
-
-        ion-item {
-            --padding-start: 0;
-            margin-bottom: 4px;
-        }
-
-        ion-item ion-icon {
-            margin-right: 16px;
-        }
-
-        .info-card {
-            margin: 16px;
-            background: linear-gradient(135deg, var(--ion-color-tertiary-tint) 0%, var(--ion-color-tertiary) 100%);
-            color: white;
-        }
-
-        .info-card ion-card-subtitle {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .info-card ion-card-title {
-            color: white;
-        }
-
-        .info-card ion-button {
-            margin-top: 12px;
-            --background: white;
-            --color: var(--ion-color-tertiary);
-        }
-    `]
+    templateUrl: './dashboard.page.html',
+    styleUrl: './dashboard.page.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardPage implements OnInit {
     private readonly router = inject(Router);
     private readonly authService = inject(AuthService);
     private readonly barbeariaService = inject(BarbeariaService);
 
+    // Estado
     readonly carregando = this.barbeariaService.carregando;
     readonly possuiBarbearia = this.barbeariaService.possuiBarbearia;
     readonly barbearia = this.barbeariaService.minhaBarbearia;
-    readonly totalServicos = computed(() => this.barbearia()?.servicos?.length ?? 0);
+
+    // Stats mockados (TODO: integrar com serviços reais)
+    readonly stats = signal({
+        clientesHoje: 0,
+        agendamentosHoje: 0,
+        faturamentoHoje: 0,
+        barbeirosAtivos: 0
+    });
+
+    // Módulos disponíveis
+    readonly modulos = computed<ModuloDashboard[]>(() => {
+        const temBarbearia = this.possuiBarbearia();
+        return [
+            {
+                id: 'fila',
+                nome: 'Fila de Atendimento',
+                descricao: 'Gerenciar clientes na fila',
+                icone: 'list-outline',
+                rota: '/tabs/admin/fila',
+                cor: 'primary',
+                badge: 3, // TODO: integrar com serviço real
+                disponivel: temBarbearia
+            },
+            {
+                id: 'sessao',
+                nome: 'Sessão / Caixa',
+                descricao: 'Controle financeiro do dia',
+                icone: 'wallet-outline',
+                rota: '/tabs/admin/sessao',
+                cor: 'success',
+                disponivel: temBarbearia
+            },
+            {
+                id: 'barbearia',
+                nome: 'Minha Barbearia',
+                descricao: 'Dados e configurações',
+                icone: 'storefront-outline',
+                rota: '/tabs/admin/barbearia',
+                cor: 'secondary',
+                disponivel: true
+            },
+            {
+                id: 'servicos',
+                nome: 'Serviços',
+                descricao: 'Cortes, barba e preços',
+                icone: 'cut-outline',
+                rota: '/tabs/admin/servicos',
+                cor: 'tertiary',
+                disponivel: temBarbearia
+            },
+            {
+                id: 'barbeiros',
+                nome: 'Minha Equipe',
+                descricao: 'Gerenciar barbeiros',
+                icone: 'people-outline',
+                rota: '/tabs/admin/barbeiros',
+                cor: 'warning',
+                badge: 1, // TODO: solicitações pendentes
+                disponivel: temBarbearia
+            },
+            {
+                id: 'relatorios',
+                nome: 'Relatórios',
+                descricao: 'Estatísticas e métricas',
+                icone: 'stats-chart-outline',
+                rota: '/tabs/admin/relatorios',
+                cor: 'primary',
+                disponivel: temBarbearia
+            },
+            {
+                id: 'estoque',
+                nome: 'Estoque',
+                descricao: 'Produtos e insumos',
+                icone: 'cube-outline',
+                rota: '/tabs/admin/estoque',
+                cor: 'tertiary',
+                disponivel: temBarbearia
+            },
+            {
+                id: 'tema',
+                nome: 'Personalizar',
+                descricao: 'Cores e aparência',
+                icone: 'color-palette-outline',
+                rota: '/tabs/admin/tema',
+                cor: 'secondary',
+                disponivel: temBarbearia
+            }
+        ];
+    });
 
     constructor() {
         addIcons({
             storefrontOutline, calendarOutline, peopleOutline,
             cashOutline, settingsOutline, colorPaletteOutline,
             cutOutline, statsChartOutline, notificationsOutline,
-            starOutline, chevronForwardOutline
+            starOutline, chevronForwardOutline, cubeOutline,
+            timeOutline, personOutline, listOutline, walletOutline
         });
     }
 
@@ -340,7 +177,19 @@ export class DashboardPage implements OnInit {
         return nome ? nome.split(' ')[0] : 'Admin';
     }
 
-    navegarPara(rota: string): void {
-        this.router.navigate([rota]);
+    navegarPara(modulo: ModuloDashboard): void {
+        if (!modulo.disponivel) {
+            // Se não tem barbearia, redirecionar para cadastro
+            this.router.navigate(['/tabs/admin/barbearia']);
+            return;
+        }
+        this.router.navigate([modulo.rota]);
+    }
+
+    getHoraSaudacao(): string {
+        const hora = new Date().getHours();
+        if (hora < 12) return 'Bom dia';
+        if (hora < 18) return 'Boa tarde';
+        return 'Boa noite';
     }
 }

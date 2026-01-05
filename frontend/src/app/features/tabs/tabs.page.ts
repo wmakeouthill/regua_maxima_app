@@ -36,15 +36,15 @@ export class TabsPage {
 
     // Tabs por tipo de usuário
     private readonly tabsAdmin: TabConfig[] = [
+        { tab: 'admin/dashboard', icon: 'home-outline', label: 'Início' },
         { tab: 'admin/fila', icon: 'list-outline', label: 'Fila' },
         { tab: 'admin/sessao', icon: 'wallet-outline', label: 'Caixa' },
-        { tab: 'admin/relatorios', icon: 'stats-chart-outline', label: 'Relatórios' },
-        { tab: 'admin/estoque', icon: 'cube-outline', label: 'Estoque' },
         { tab: 'perfil', icon: 'person-outline', label: 'Perfil' }
     ];
 
     private readonly tabsBarbeiro: TabConfig[] = [
         { tab: 'barbeiro/fila', icon: 'list-outline', label: 'Fila' },
+        { tab: 'barbeiro/agenda', icon: 'calendar-outline', label: 'Agenda' },
         { tab: 'perfil', icon: 'person-outline', label: 'Perfil' }
     ];
 

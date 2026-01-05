@@ -1,37 +1,187 @@
-.profile-header .premium-badge {
-    margin-top: 12px;
+// ============================================
+// Perfil Page - Premium Barbershop Theme
+// ============================================
+
+// Variáveis de tema barbershop
+$barbershop-dark: #1a1a2e;
+$barbershop-darker: #0f0f1a;
+$barbershop-gold: #c9a227;
+$barbershop-gold-light: #e8d48a;
+$barbershop-silver: #a0a0a0;
+$barbershop-white: #f8f9fa;
+
+// Header
+.perfil-header {
+    ion-toolbar {
+        --background: #{$barbershop-dark};
+        --color: #{$barbershop-white};
+
+        ion-title {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+    }
 }
 
-ion-list.list-inset {
-    margin: 16px;
+// Content
+.perfil-content {
+    --background: #{$barbershop-white};
 }
 
-ion-item ion-icon[slot="start"] {
-    font-size: 22px;
-    margin-right: 12px;
+// Profile Header
+.profile-header {
+    position: relative;
+    padding: 32px 20px 28px;
+    text-align: center;
 }
 
-ion-item ion-icon[slot="end"] {
-    font-size: 18px;
+.profile-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, $barbershop-dark 0%, $barbershop-darker 100%);
+
+    // Padrão barbershop sutil
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 120px;
+        height: 100%;
+        background: repeating-linear-gradient(45deg,
+                transparent,
+                transparent 8px,
+                rgba($barbershop-gold, 0.05) 8px,
+                rgba($barbershop-gold, 0.05) 16px);
+    }
 }
 
-ion-note {
-    background: var(--ion-color-secondary);
-    color: #000;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
+.profile-info {
+    position: relative;
+    z-index: 1;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $barbershop-gold 0%, #a68520 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 16px rgba($barbershop-gold, 0.3);
+
+    ion-icon {
+        font-size: 36px;
+        color: white;
+    }
+}
+
+.profile-header h2 {
+    margin: 0 0 4px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: $barbershop-white;
+    letter-spacing: 0.5px;
+}
+
+.profile-email {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: rgba($barbershop-white, 0.7);
+}
+
+.profile-role {
+    ion-badge {
+        font-size: 0.7rem;
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+}
+
+// Menu Sections
+.menu-section {
+    padding: 0 16px;
+    margin-bottom: 8px;
+}
+
+.section-title {
+    margin: 20px 0 12px 4px;
+    font-size: 0.85rem;
     font-weight: 600;
-    margin-right: 8px;
+    color: $barbershop-silver;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
+.menu-list {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+
+    ion-item {
+        --padding-start: 16px;
+        --padding-end: 12px;
+        --min-height: 56px;
+        --border-color: rgba(0, 0, 0, 0.04);
+
+        &:last-child {
+            --border-width: 0;
+        }
+
+        ion-icon[slot="start"] {
+            font-size: 22px;
+            margin-right: 14px;
+        }
+
+        ion-label {
+            font-weight: 500;
+            color: $barbershop-dark;
+        }
+
+        ion-badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+    }
+}
+
+// Logout Section
+.logout-section {
+    padding: 24px 16px 8px;
+
+    ion-button {
+        --border-radius: 12px;
+        --border-width: 2px;
+        font-weight: 600;
+        height: 50px;
+    }
+}
+
+// App Version
 .app-version {
     text-align: center;
     padding: 16px;
-    
+
     p {
         margin: 0;
-        color: var(--ion-color-medium);
-        font-size: 12px;
+        color: $barbershop-silver;
+        font-size: 0.75rem;
     }
+}
+
+// Toggle customizado
+ion-toggle {
+    --track-background: rgba($barbershop-dark, 0.2);
+    --track-background-checked: #{$barbershop-gold};
+    --handle-background: white;
+    --handle-background-checked: white;
 }

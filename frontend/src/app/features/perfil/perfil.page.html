@@ -1,88 +1,104 @@
-<ion-header>
+<ion-header class="perfil-header">
     <ion-toolbar>
-        <ion-title>Meu Perfil</ion-title>
+        <ion-title>Perfil</ion-title>
     </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content class="perfil-content">
     <!-- Profile Header -->
     <div class="profile-header">
-        <div class="profile-avatar">
-            <ion-icon name="person-outline"></ion-icon>
-        </div>
-        <h2>{{ authService.currentUser()?.nome || 'Usuário' }}</h2>
-        <p>{{ authService.currentUser()?.email }}</p>
-        @if (isPremium) {
-            <div class="premium-badge">
-                <ion-icon name="star-outline"></ion-icon>
-                Cliente Premium
+        <div class="profile-background"></div>
+        <div class="profile-info">
+            <div class="profile-avatar">
+                <ion-icon name="person-outline"></ion-icon>
             </div>
-        }
+            <h2>{{ authService.currentUser()?.nome || 'Usuário' }}</h2>
+            <p class="profile-email">{{ authService.currentUser()?.email }}</p>
+
+            <!-- Role atual com seletor -->
+            <div class="profile-role" (click)="possuiMultiplasRoles() ? abrirSeletorRole() : null">
+                <ion-badge [color]="isAdmin() ? 'secondary' : isBarbeiro() ? 'tertiary' : 'primary'">
+                    {{ roleLabel() }}
+                </ion-badge>
+                @if (possuiMultiplasRoles()) {
+                <ion-icon name="chevron-down-outline" class="role-switcher-icon"></ion-icon>
+                }
+            </div>
+
+            @if (trocandoRole()) {
+            <div class="role-loading">
+                <ion-spinner name="dots" color="secondary"></ion-spinner>
+            </div>
+            }
+        </div>
     </div>
 
-    <!-- Stripe decorativo -->
-    <div class="barbershop-stripe"></div>
+    <!-- Menu Principal (por Role) -->
+    <div class="menu-section">
+        <h3 class="section-title">
+            @if (isAdmin()) {
+            Gestão da Barbearia
+            } @else if (isBarbeiro()) {
+            Área Profissional
+            } @else {
+            Minha Conta
+            }
+        </h3>
 
-    <!-- Menu Conta -->
-    <ion-list class="list-inset">
-        <ion-item button detail>
-            <ion-icon name="person-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Editar Perfil</ion-label>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-        
-        <ion-item button detail>
-            <ion-icon name="calendar-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Meus Agendamentos</ion-label>
-            <ion-note slot="end">3</ion-note>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-        
-        <ion-item button detail>
-            <ion-icon name="card-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Formas de Pagamento</ion-label>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-    </ion-list>
+        <ion-list class="menu-list">
+            @for (item of menuPrincipal(); track item.id) {
+            <ion-item button detail (click)="navegarPara(item)">
+                <ion-icon [name]="item.icone" slot="start" [color]="item.cor || 'primary'"></ion-icon>
+                <ion-label>{{ item.label }}</ion-label>
+                @if (item.badge && item.badge > 0) {
+                <ion-badge slot="end" color="danger">{{ item.badge }}</ion-badge>
+                }
+            </ion-item>
+            }
+        </ion-list>
+    </div>
 
-    <!-- Menu Preferências -->
-    <ion-list class="list-inset">
-        <ion-item>
-            <ion-icon name="notifications-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Notificações</ion-label>
-            <ion-toggle [checked]="true" slot="end"></ion-toggle>
-        </ion-item>
-    </ion-list>
+    <!-- Trocar Perfil (múltiplas roles) -->
+    @if (possuiMultiplasRoles()) {
+    <div class="menu-section">
+        <ion-list class="menu-list">
+            <ion-item button (click)="abrirSeletorRole()">
+                <ion-icon name="swap-horizontal-outline" slot="start" color="tertiary"></ion-icon>
+                <ion-label>Trocar Perfil</ion-label>
+                <ion-note slot="end">{{ roleLabel() }}</ion-note>
+            </ion-item>
+        </ion-list>
+    </div>
+    }
 
-    <!-- Menu Suporte -->
-    <ion-list class="list-inset">
-        <ion-item button detail>
-            <ion-icon name="help-circle-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Central de Ajuda</ion-label>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-        
-        <ion-item button detail>
-            <ion-icon name="shield-checkmark-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Privacidade e Segurança</ion-label>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-        
-        <ion-item button detail>
-            <ion-icon name="settings-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>Configurações</ion-label>
-            <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
-        </ion-item>
-    </ion-list>
+    <!-- Notificações -->
+    <div class="menu-section">
+        <ion-list class="menu-list">
+            <ion-item>
+                <ion-icon name="notifications-outline" slot="start" color="primary"></ion-icon>
+                <ion-label>Notificações</ion-label>
+                <ion-toggle [(ngModel)]="notificacoesAtivas" slot="end"></ion-toggle>
+            </ion-item>
+        </ion-list>
+    </div>
+
+    <!-- Menu Configurações -->
+    <div class="menu-section">
+        <h3 class="section-title">Suporte</h3>
+
+        <ion-list class="menu-list">
+            @for (item of menuConfig; track item.id) {
+            <ion-item button detail (click)="navegarPara(item)">
+                <ion-icon [name]="item.icone" slot="start" color="medium"></ion-icon>
+                <ion-label>{{ item.label }}</ion-label>
+            </ion-item>
+            }
+        </ion-list>
+    </div>
 
     <!-- Botão Sair -->
-    <div class="ion-padding">
-        <ion-button 
-            expand="block" 
-            fill="outline"
-            color="danger"
-            (click)="logout()"
-        >
+    <div class="logout-section">
+        <ion-button expand="block" fill="outline" color="danger" (click)="logout()">
             <ion-icon name="log-out-outline" slot="start"></ion-icon>
             Sair da Conta
         </ion-button>
@@ -92,4 +108,8 @@
     <div class="app-version">
         <p>Régua Máxima v1.0.0</p>
     </div>
+
+    <!-- Action Sheet para trocar role -->
+    <ion-action-sheet [isOpen]="mostrarActionSheet()" header="Trocar para..." [buttons]="actionSheetButtons()"
+        (didDismiss)="mostrarActionSheet.set(false)"></ion-action-sheet>
 </ion-content>

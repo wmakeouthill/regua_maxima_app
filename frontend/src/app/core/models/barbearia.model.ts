@@ -37,12 +37,17 @@ export interface BarbeariaResumo {
     slug: string;
     nome: string;
     descricao?: string;
+    endereco?: string;
     cidade: string;
     estado: string;
+    latitude?: number;
+    longitude?: number;
     fotoUrl?: string;
     logoUrl?: string;
+    ativo: boolean;
     avaliacaoMedia: number;
     totalAvaliacoes: number;
+    quantidadeBarbeiros?: number;
     distanciaKm?: number;
 }
 

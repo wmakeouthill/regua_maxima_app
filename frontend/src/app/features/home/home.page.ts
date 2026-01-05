@@ -54,7 +54,7 @@ export class HomePage implements OnInit {
         // Redireciona cada tipo para sua área específica
         const tipo = this.authService.getTipoUsuario();
         if (tipo === 'ADMIN') {
-            this.router.navigate(['/tabs/admin/fila'], { replaceUrl: true });
+            this.router.navigate(['/tabs/admin/dashboard'], { replaceUrl: true });
         } else if (tipo === 'BARBEIRO') {
             this.router.navigate(['/tabs/barbeiro/fila'], { replaceUrl: true });
         } else if (tipo === 'CLIENTE') {

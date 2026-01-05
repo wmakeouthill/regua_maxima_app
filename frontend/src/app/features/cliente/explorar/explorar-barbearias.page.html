@@ -1,6 +1,6 @@
-<ion-header>
-    <ion-toolbar color="primary">
-        <ion-title>Barbeiros</ion-title>
+<ion-header class="explorar-header">
+    <ion-toolbar>
+        <ion-title>Barbearias</ion-title>
         <ion-buttons slot="end">
             <ion-button>
                 <ion-icon name="notifications-outline" slot="icon-only"></ion-icon>
@@ -8,17 +8,13 @@
         </ion-buttons>
     </ion-toolbar>
 
-    <ion-toolbar color="primary">
-        <ion-searchbar
-            [(ngModel)]="termoBusca"
-            (ionInput)="buscar()"
-            placeholder="Buscar barbeiros..."
-            debounce="300"
-        ></ion-searchbar>
+    <ion-toolbar>
+        <ion-searchbar [(ngModel)]="termoBusca" (ionInput)="buscar()" placeholder="Buscar barbearias..."
+            debounce="300"></ion-searchbar>
     </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content class="explorar-content">
     <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
     </ion-refresher>
@@ -32,10 +28,10 @@
 
     <!-- Erro de localização -->
     @if (erroLocalizacao()) {
-        <div class="location-error">
-            <ion-icon name="location-outline" color="warning"></ion-icon>
-            <span>{{ erroLocalizacao() }}</span>
-        </div>
+    <div class="location-error">
+        <ion-icon name="location-outline" color="warning"></ion-icon>
+        <span>{{ erroLocalizacao() }}</span>
+    </div>
     }
 
     <!-- Seletor Lista/Mapa -->
@@ -53,116 +49,113 @@
     </div>
 
     @if (carregando()) {
-        <!-- Skeleton loading -->
-        <div class="skeleton-list">
-            @for (i of [1,2,3]; track i) {
-                <ion-card>
-                    <ion-card-content>
-                        <div class="skeleton-card">
-                            <ion-skeleton-text [animated]="true" style="width: 80px; height: 80px; border-radius: 50%;"></ion-skeleton-text>
-                            <div class="skeleton-info">
-                                <ion-skeleton-text [animated]="true" style="width: 60%; height: 20px;"></ion-skeleton-text>
-                                <ion-skeleton-text [animated]="true" style="width: 80%; height: 16px;"></ion-skeleton-text>
-                                <ion-skeleton-text [animated]="true" style="width: 40%; height: 16px;"></ion-skeleton-text>
-                            </div>
-                        </div>
-                    </ion-card-content>
-                </ion-card>
-            }
-        </div>
-    } @else if (tipoVisualizacao === 'mapa') {
-        <!-- Placeholder do Mapa -->
-        <div class="map-placeholder">
-            <ion-icon name="map-outline"></ion-icon>
-            <h3>Mapa de Barbeiros</h3>
-            <p>Integração com Google Maps em breve</p>
-            <ion-button fill="outline" (click)="tipoVisualizacao = 'lista'">
-                Ver em Lista
-            </ion-button>
-        </div>
-    } @else if (barbeirosFiltrados().length === 0) {
-        <ion-card class="empty-card">
+    <!-- Skeleton loading -->
+    <div class="skeleton-list">
+        @for (i of [1,2,3]; track i) {
+        <ion-card>
             <ion-card-content>
-                <ion-icon name="person-outline"></ion-icon>
-                <h4>Nenhum barbeiro encontrado</h4>
-                <p>Não há barbeiros próximos à sua localização ou tente buscar com outros termos</p>
+                <div class="skeleton-card">
+                    <ion-skeleton-text [animated]="true"
+                        style="width: 90px; height: 90px; border-radius: 12px;"></ion-skeleton-text>
+                    <div class="skeleton-info">
+                        <ion-skeleton-text [animated]="true" style="width: 70%; height: 20px;"></ion-skeleton-text>
+                        <ion-skeleton-text [animated]="true" style="width: 90%; height: 16px;"></ion-skeleton-text>
+                        <ion-skeleton-text [animated]="true" style="width: 50%; height: 16px;"></ion-skeleton-text>
+                    </div>
+                </div>
             </ion-card-content>
         </ion-card>
+        }
+    </div>
+    } @else if (tipoVisualizacao === 'mapa') {
+    <!-- Placeholder do Mapa -->
+    <div class="map-placeholder">
+        <ion-icon name="map-outline"></ion-icon>
+        <h3>Mapa de Barbearias</h3>
+        <p>Integração com Google Maps em breve</p>
+        <ion-button fill="outline" (click)="tipoVisualizacao = 'lista'">
+            Ver em Lista
+        </ion-button>
+    </div>
+    } @else if (barbeariasFiltradas().length === 0) {
+    <ion-card class="empty-card">
+        <ion-card-content>
+            <ion-icon name="storefront-outline"></ion-icon>
+            <h4>Nenhuma barbearia encontrada</h4>
+            <p>Não há barbearias próximas à sua localização ou tente buscar com outros termos</p>
+        </ion-card-content>
+    </ion-card>
     } @else {
-        <!-- Lista de Barbeiros -->
-        <div class="barbeiros-list">
-            @for (barbeiro of barbeirosFiltrados(); track barbeiro.id) {
-                <ion-card (click)="abrirBarbeiro(barbeiro)" button>
-                    <ion-card-content>
-                        <div class="barbeiro-card">
-                            <!-- Foto -->
-                            <div class="barbeiro-foto">
-                                @if (barbeiro.fotoUrl) {
-                                    <img [src]="barbeiro.fotoUrl" [alt]="barbeiro.nome" />
-                                } @else {
-                                    <div class="foto-placeholder">
-                                        <ion-icon name="person-outline"></ion-icon>
-                                    </div>
-                                }
-                                @if (barbeiro.vinculado && barbeiro.barbeariaNome) {
-                                    <ion-badge color="tertiary" class="vinculo-badge">Barbearia</ion-badge>
-                                } @else {
-                                    <ion-badge color="medium" class="vinculo-badge">Autônomo</ion-badge>
-                                }
-                            </div>
-
-                            <!-- Info -->
-                            <div class="barbeiro-info">
-                                <div class="barbeiro-header">
-                                    <h3>{{ barbeiro.nome }}</h3>
-                                    <ion-button 
-                                        fill="clear" 
-                                        size="small" 
-                                        (click)="toggleFavorito(barbeiro, $event)"
-                                    >
-                                        <ion-icon 
-                                            [name]="barbeiro.favorito ? 'heart' : 'heart-outline'"
-                                            [color]="barbeiro.favorito ? 'danger' : 'medium'"
-                                            slot="icon-only"
-                                        ></ion-icon>
-                                    </ion-button>
-                                </div>
-
-                                @if (barbeiro.barbeariaNome) {
-                                    <p class="barbearia-nome">
-                                        <ion-icon name="storefront-outline"></ion-icon>
-                                        {{ barbeiro.barbeariaNome }}
-                                    </p>
-                                }
-
-                                <div class="barbeiro-meta">
-                                    @if (barbeiro.distanciaKm !== undefined) {
-                                        <span class="distancia">
-                                            <ion-icon name="navigate-outline"></ion-icon>
-                                            {{ barbeiro.distanciaKm | number:'1.1-1' }} km
-                                        </span>
-                                    }
-                                    @if (barbeiro.totalAvaliacoes > 0) {
-                                        <span class="avaliacao">
-                                            <ion-icon name="star-outline" color="warning"></ion-icon>
-                                            {{ barbeiro.avaliacaoMedia | number:'1.1-1' }}
-                                            <small>({{ barbeiro.totalAvaliacoes }})</small>
-                                        </span>
-                                    }
-                                </div>
-
-                                @if (barbeiro.especialidades) {
-                                    <ion-chip size="small" color="secondary">
-                                        {{ barbeiro.especialidades | slice:0:30 }}@if(barbeiro.especialidades.length > 30) {...}
-                                    </ion-chip>
-                                }
-                            </div>
-
-                            <ion-icon name="chevron-forward-outline" class="arrow"></ion-icon>
+    <!-- Lista de Barbearias -->
+    <div class="barbearias-list">
+        @for (barbearia of barbeariasFiltradas(); track barbearia.id) {
+        <ion-card (click)="abrirBarbearia(barbearia)" button class="barbearia-card-wrapper">
+            <ion-card-content>
+                <div class="barbearia-card">
+                    <!-- Foto da Barbearia -->
+                    <div class="barbearia-foto">
+                        @if (barbearia.fotoUrl) {
+                        <img [src]="barbearia.fotoUrl" [alt]="barbearia.nome" />
+                        } @else {
+                        <div class="foto-placeholder">
+                            <ion-icon name="storefront-outline"></ion-icon>
                         </div>
-                    </ion-card-content>
-                </ion-card>
-            }
-        </div>
+                        }
+                        @if (barbearia.ativo) {
+                        <ion-badge color="success" class="status-badge">Aberta</ion-badge>
+                        } @else {
+                        <ion-badge color="medium" class="status-badge">Fechada</ion-badge>
+                        }
+                    </div>
+
+                    <!-- Info da Barbearia -->
+                    <div class="barbearia-info">
+                        <div class="barbearia-header">
+                            <h3>{{ barbearia.nome }}</h3>
+                            <ion-button fill="clear" size="small" (click)="toggleFavorito(barbearia, $event)">
+                                <ion-icon [name]="barbearia.favorito ? 'heart' : 'heart-outline'"
+                                    [color]="barbearia.favorito ? 'danger' : 'medium'" slot="icon-only"></ion-icon>
+                            </ion-button>
+                        </div>
+
+                        <p class="endereco">
+                            <ion-icon name="location-outline"></ion-icon>
+                            {{ barbearia.endereco }}@if(barbearia.cidade) {, {{ barbearia.cidade }}}
+                        </p>
+
+                        <div class="barbearia-meta">
+                            @if (barbearia.distanciaKm !== undefined && barbearia.distanciaKm > 0) {
+                            <span class="distancia">
+                                <ion-icon name="navigate-outline"></ion-icon>
+                                {{ barbearia.distanciaKm | number:'1.1-1' }} km
+                            </span>
+                            }
+                            @if (barbearia.avaliacaoMedia > 0) {
+                            <span class="avaliacao">
+                                <ion-icon name="star-outline" color="warning"></ion-icon>
+                                {{ barbearia.avaliacaoMedia | number:'1.1-1' }}
+                                <small>({{ barbearia.totalAvaliacoes }})</small>
+                            </span>
+                            }
+                        </div>
+
+                        <!-- Quantidade de barbeiros -->
+                        @if (barbearia.quantidadeBarbeiros && barbearia.quantidadeBarbeiros > 0) {
+                        <div class="barbearia-extras">
+                            <ion-chip size="small" color="tertiary">
+                                <ion-icon name="people-outline"></ion-icon>
+                                <ion-label>{{ barbearia.quantidadeBarbeiros }} barbeiro@if(barbearia.quantidadeBarbeiros
+                                    > 1){s}</ion-label>
+                            </ion-chip>
+                        </div>
+                        }
+                    </div>
+
+                    <ion-icon name="chevron-forward-outline" class="arrow"></ion-icon>
+                </div>
+            </ion-card-content>
+        </ion-card>
+        }
+    </div>
     }
 </ion-content>

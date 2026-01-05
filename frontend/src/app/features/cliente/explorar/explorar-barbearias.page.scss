@@ -1,70 +1,127 @@
-ion-searchbar {
-    --background: rgba(255, 255, 255, 0.15);
-    --color: white;
-    --placeholder-color: rgba(255, 255, 255, 0.7);
-    --icon-color: rgba(255, 255, 255, 0.7);
-    --clear-button-color: white;
+// ============================================
+// Explorar Barbearias - Premium Barbershop Theme
+// ============================================
+
+// Variáveis de tema barbershop
+$barbershop-dark: #1a1a2e;
+$barbershop-darker: #0f0f1a;
+$barbershop-dark-light: #2d2d47; // lighten(dark, 10%)
+$barbershop-gold: #c9a227;
+$barbershop-gold-light: #e8d48a;
+$barbershop-silver: #a0a0a0;
+$barbershop-white: #f8f9fa;
+$warning-dark: #cc6600; // darken(#e67e22, 10%)
+
+// Header
+.explorar-header {
+    ion-toolbar {
+        --background: #{$barbershop-dark};
+        --color: #{$barbershop-white};
+
+        ion-title {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        ion-button {
+            --color: #{$barbershop-gold};
+        }
+    }
+
+    ion-searchbar {
+        --background: rgba(255, 255, 255, 0.12);
+        --color: #{$barbershop-white};
+        --placeholder-color: rgba(255, 255, 255, 0.6);
+        --icon-color: #{$barbershop-gold};
+        --clear-button-color: #{$barbershop-white};
+        padding: 0 8px 8px;
+    }
 }
 
+// Content
+.explorar-content {
+    --background: #{$barbershop-white};
+}
+
+// Location bar
 .location-bar {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    background: var(--ion-color-light);
-    border-bottom: 1px solid var(--border-color);
-}
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 
-.location-bar ion-icon {
-    color: var(--ion-color-primary);
-}
+    ion-icon {
+        color: $barbershop-gold;
+        font-size: 18px;
+    }
 
-.location-bar span {
-    flex: 1;
-    font-size: 0.9rem;
-    color: var(--ion-color-dark);
+    span {
+        flex: 1;
+        font-size: 0.9rem;
+        color: $barbershop-dark;
+        font-weight: 500;
+    }
+
+    ion-button {
+        --color: #{$barbershop-gold};
+        font-size: 0.85rem;
+    }
 }
 
 .location-error {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    background: rgba(var(--ion-color-warning-rgb), 0.1);
-    border-bottom: 1px solid var(--ion-color-warning);
+    padding: 10px 16px;
+    background: rgba(#e67e22, 0.1);
+    border-bottom: 1px solid rgba(#e67e22, 0.3);
     font-size: 0.8rem;
-    color: var(--ion-color-warning-shade);
+    color: $warning-dark;
 }
 
+// View toggle
 .view-toggle {
     padding: 12px 16px;
+
+    ion-segment {
+        --background: rgba($barbershop-dark, 0.06);
+        border-radius: 10px;
+    }
+
+    ion-segment-button {
+        --color: $barbershop-silver;
+        --color-checked: $barbershop-dark;
+        --indicator-color: white;
+        --indicator-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        font-weight: 500;
+
+        ion-icon {
+            font-size: 18px;
+        }
+    }
 }
 
-.view-toggle ion-segment {
-    --background: var(--ion-color-light);
-}
-
-.view-toggle ion-segment-button {
-    --color: var(--ion-color-medium);
-    --color-checked: var(--ion-color-primary);
-}
-
+// Skeleton
 .skeleton-list {
-    padding: 0 8px;
+    padding: 0 12px;
 }
 
 .skeleton-card {
     display: flex;
     gap: 16px;
+    padding: 4px;
 }
 
 .skeleton-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
+// Map placeholder
 .map-placeholder {
     display: flex;
     flex-direction: column;
@@ -72,60 +129,95 @@ ion-searchbar {
     justify-content: center;
     padding: 64px 32px;
     text-align: center;
+
+    ion-icon {
+        font-size: 80px;
+        color: $barbershop-gold;
+        opacity: 0.5;
+        margin-bottom: 16px;
+    }
+
+    h3 {
+        margin: 0 0 8px;
+        color: $barbershop-dark;
+        font-weight: 600;
+    }
+
+    p {
+        color: $barbershop-silver;
+        margin-bottom: 24px;
+    }
+
+    ion-button {
+        --color: #{$barbershop-gold};
+        --border-color: #{$barbershop-gold};
+    }
 }
 
-.map-placeholder ion-icon {
-    font-size: 80px;
-    color: var(--ion-color-medium);
-    margin-bottom: 16px;
-}
-
-.map-placeholder h3 {
-    margin: 0 0 8px 0;
-    color: var(--ion-color-dark);
-}
-
-.map-placeholder p {
-    color: var(--ion-color-medium);
-    margin-bottom: 24px;
-}
-
+// Empty state
 .empty-card {
     text-align: center;
     margin: 32px 16px;
+
+    ion-card-content {
+        padding: 40px 24px;
+    }
+
+    ion-icon {
+        font-size: 64px;
+        color: $barbershop-gold;
+        opacity: 0.5;
+        margin-bottom: 16px;
+    }
+
+    h4 {
+        margin: 0 0 8px;
+        color: $barbershop-dark;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0;
+        color: $barbershop-silver;
+        font-size: 0.9rem;
+    }
 }
 
-.empty-card ion-icon {
-    font-size: 64px;
-    color: var(--ion-color-medium);
-    margin-bottom: 16px;
+// Barbearias list
+.barbearias-list {
+    padding: 0 12px 20px;
 }
 
-// ========== Barbeiros List ==========
+.barbearia-card-wrapper {
+    margin-bottom: 12px;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
 
-.barbeiros-list {
-    padding: 0 8px 16px 8px;
+    &:active {
+        transform: scale(0.99);
+    }
 }
 
-.barbeiro-card {
+.barbearia-card {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
 }
 
-.barbeiro-foto {
+.barbearia-foto {
     position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
-}
 
-.barbeiro-foto img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .foto-placeholder {
@@ -134,62 +226,66 @@ ion-searchbar {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--ion-color-light);
+    background: linear-gradient(135deg, $barbershop-dark 0%, $barbershop-dark-light 100%);
+
+    ion-icon {
+        font-size: 36px;
+        color: $barbershop-gold;
+    }
 }
 
-.foto-placeholder ion-icon {
-    font-size: 32px;
-    color: var(--ion-color-medium);
-}
-
-.vinculo-badge {
+.status-badge {
     position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.55rem;
-    white-space: nowrap;
+    bottom: 6px;
+    left: 6px;
+    font-size: 0.6rem;
+    padding: 3px 6px;
+    border-radius: 6px;
 }
 
-.barbeiro-info {
+.barbearia-info {
     flex: 1;
     min-width: 0;
 }
 
-.barbeiro-header {
+.barbearia-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+
+    h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: $barbershop-dark;
+        line-height: 1.3;
+    }
+
+    ion-button {
+        --padding-start: 4px;
+        --padding-end: 4px;
+        margin: -6px -6px 0 0;
+    }
 }
 
-.barbeiro-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--ion-color-dark);
-}
-
-.barbeiro-header ion-button {
-    --padding-start: 4px;
-    --padding-end: 4px;
-    margin: -4px -4px 0 0;
-}
-
-.barbearia-nome {
+.endereco {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
-    margin: 4px 0;
+    margin: 6px 0;
     font-size: 0.8rem;
-    color: var(--ion-color-tertiary);
+    color: $barbershop-silver;
+    line-height: 1.3;
+
+    ion-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: $barbershop-gold;
+    }
 }
 
-.barbearia-nome ion-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.barbeiro-meta {
+.barbearia-meta {
     display: flex;
     gap: 16px;
     margin: 8px 0;
@@ -201,27 +297,61 @@ ion-searchbar {
     align-items: center;
     gap: 4px;
     font-size: 0.85rem;
-}
 
-.distancia ion-icon,
-.avaliacao ion-icon {
-    font-size: 14px;
+    ion-icon {
+        font-size: 14px;
+    }
 }
 
 .distancia {
-    color: var(--ion-color-primary);
+    color: $barbershop-dark;
+    font-weight: 500;
+
+    ion-icon {
+        color: $barbershop-gold;
+    }
 }
 
-.avaliacao small {
-    color: var(--ion-color-medium);
+.avaliacao {
+    color: $barbershop-dark;
+
+    small {
+        color: $barbershop-silver;
+        font-size: 0.75rem;
+    }
 }
 
-ion-chip {
-    height: 24px;
-    font-size: 0.7rem;
+.barbearia-extras {
+    margin-top: 6px;
+
+    ion-chip {
+        height: 26px;
+        font-size: 0.7rem;
+        --background: rgba($barbershop-dark, 0.08);
+        --color: #{$barbershop-dark};
+
+        ion-icon {
+            font-size: 14px;
+            color: $barbershop-gold;
+        }
+    }
 }
 
 .arrow {
-    color: var(--ion-color-medium);
+    color: $barbershop-silver;
     align-self: center;
+    font-size: 20px;
+}
+
+// Responsividade
+@media (min-width: 768px) {
+    .barbearias-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .barbearia-card-wrapper {
+        margin-bottom: 0;
+    }
 }

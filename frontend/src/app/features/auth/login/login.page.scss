@@ -32,3 +32,81 @@ ion-list {
 .perfil-selecionado ion-icon {
     margin-right: 6px;
 }
+
+// Seleção de perfil (múltiplas roles)
+.selecao-perfil {
+    text-align: center;
+    padding: 24px 0;
+    position: relative;
+
+    h2 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--ion-color-dark);
+    }
+
+    .subtitle {
+        margin: 0 0 24px;
+        color: var(--ion-color-medium);
+        font-size: 0.9rem;
+    }
+}
+
+.perfis-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.perfil-card {
+    margin: 0;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:active {
+        transform: scale(0.98);
+    }
+
+    ion-card-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        text-align: left;
+    }
+
+    ion-icon {
+        font-size: 32px;
+        color: var(--ion-color-secondary);
+        flex-shrink: 0;
+    }
+
+    h3 {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--ion-color-medium);
+        line-height: 1.3;
+    }
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+}

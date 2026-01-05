@@ -1,0 +1,130 @@
+<ion-header class="dashboard-header">
+    <ion-toolbar>
+        <ion-title>Painel</ion-title>
+        <ion-buttons slot="end">
+            <ion-button>
+                <ion-icon name="notifications-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content">
+    @if (carregando()) {
+    <div class="loading-container">
+        <ion-spinner name="crescent" color="secondary"></ion-spinner>
+        <p>Carregando...</p>
+    </div>
+    } @else {
+    <!-- Header Premium -->
+    <div class="hero-section">
+        <div class="hero-background"></div>
+        <div class="hero-content">
+            <p class="hero-greeting">{{ getHoraSaudacao() }},</p>
+            <h1 class="hero-name">{{ getPrimeiroNome() }}</h1>
+
+            @if (possuiBarbearia() && barbearia()) {
+            <div class="hero-barbearia">
+                <ion-icon name="storefront-outline"></ion-icon>
+                <span>{{ barbearia()?.nome }}</span>
+                @if (barbearia()?.ativo) {
+                <ion-badge color="success">Ativa</ion-badge>
+                } @else {
+                <ion-badge color="warning">Inativa</ion-badge>
+                }
+            </div>
+
+            @if ((barbearia()?.avaliacaoMedia ?? 0) > 0) {
+            <div class="hero-rating">
+                <ion-icon name="star-outline"></ion-icon>
+                <span>{{ barbearia()?.avaliacaoMedia | number:'1.1-1' }}</span>
+                <small>({{ barbearia()?.totalAvaliacoes }} avaliações)</small>
+            </div>
+            }
+            }
+        </div>
+    </div>
+
+    @if (!possuiBarbearia()) {
+    <!-- CTA: Cadastrar Barbearia -->
+    <ion-card class="cta-card" button (click)="navegarPara(modulos()[2])">
+        <ion-card-content>
+            <div class="cta-icon">
+                <ion-icon name="storefront-outline"></ion-icon>
+            </div>
+            <div class="cta-text">
+                <h2>Configure sua Barbearia</h2>
+                <p>Complete o cadastro para começar a receber clientes</p>
+            </div>
+            <ion-icon name="chevron-forward-outline" class="cta-arrow"></ion-icon>
+        </ion-card-content>
+    </ion-card>
+    }
+
+    <!-- Stats Cards (quando tem barbearia) -->
+    @if (possuiBarbearia()) {
+    <div class="stats-section">
+        <ion-grid>
+            <ion-row>
+                <ion-col size="6">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <ion-icon name="person-outline"></ion-icon>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value">{{ stats().clientesHoje }}</span>
+                            <span class="stat-label">Clientes Hoje</span>
+                        </div>
+                    </div>
+                </ion-col>
+                <ion-col size="6">
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <ion-icon name="cash-outline"></ion-icon>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value">R$ {{ stats().faturamentoHoje }}</span>
+                            <span class="stat-label">Faturamento</span>
+                        </div>
+                    </div>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
+    </div>
+    }
+
+    <!-- Módulos -->
+    <div class="modules-section">
+        <h3 class="section-title">Gestão</h3>
+
+        <ion-grid>
+            <ion-row>
+                @for (modulo of modulos(); track modulo.id) {
+                <ion-col size="6">
+                    <div class="module-card" [class.module-disabled]="!modulo.disponivel" (click)="navegarPara(modulo)"
+                        ion-ripple-effect>
+                        <div class="module-icon" [attr.data-cor]="modulo.cor">
+                            <ion-icon [name]="modulo.icone"></ion-icon>
+                        </div>
+                        <h4 class="module-name">{{ modulo.nome }}</h4>
+                        <p class="module-desc">{{ modulo.descricao }}</p>
+
+                        @if (modulo.badge && modulo.badge > 0) {
+                        <ion-badge class="module-badge" color="danger">
+                            {{ modulo.badge }}
+                        </ion-badge>
+                        }
+
+                        @if (!modulo.disponivel) {
+                        <div class="module-lock">
+                            <span>🔒</span>
+                        </div>
+                        }
+                    </div>
+                </ion-col>
+                }
+            </ion-row>
+        </ion-grid>
+    </div>
+    }
+</ion-content>

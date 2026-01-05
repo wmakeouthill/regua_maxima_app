@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
-import { DecimalPipe, SlicePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
@@ -11,17 +11,18 @@ import { addIcons } from 'ionicons';
 import {
     locationOutline, starOutline, heartOutline, heart,
     mapOutline, listOutline, navigateOutline, storefrontOutline,
-    chevronForwardOutline, notificationsOutline, personOutline
+    chevronForwardOutline, notificationsOutline, peopleOutline,
+    cutOutline, timeOutline
 } from 'ionicons/icons';
 import { Geolocation } from '@capacitor/geolocation';
-import { BarbeiroService } from '@core/services/barbeiro.service';
-import { BarbeiroResumo } from '@core/models/barbeiro.model';
+import { BarbeariaService } from '@core/services/barbearia.service';
+import { BarbeariaResumo } from '@core/models/barbearia.model';
 
 /**
- * Card de barbeiro para exibição na lista.
- * Adaptado do BarbeiroResumo com campos adicionais para UI.
+ * Card de barbearia para exibição na lista.
+ * Estende BarbeariaResumo com campos adicionais para UI.
  */
-interface BarbeiroCard extends BarbeiroResumo {
+interface BarbeariaCard extends BarbeariaResumo {
     distanciaKm?: number;
     favorito: boolean;
 }
@@ -33,14 +34,14 @@ type TipoVisualizacao = 'lista' | 'mapa';
 
 /**
  * Página principal do Cliente.
- * Lista de barbeiros próximos com busca e filtros.
- * Conecta com dados reais do backend via BarbeiroService.
+ * Lista de BARBEARIAS próximas com busca e filtros.
+ * Conecta com dados reais do backend via BarbeariaService.
  */
 @Component({
     selector: 'app-explorar-barbearias',
     standalone: true,
     imports: [
-        DecimalPipe, SlicePipe, FormsModule,
+        DecimalPipe, FormsModule,
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
         IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
         IonRefresherContent, IonButtons, IonChip, IonSearchbar,
@@ -51,11 +52,11 @@ type TipoVisualizacao = 'lista' | 'mapa';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExplorarBarbeariasPage implements OnInit {
-    private readonly barbeiroService = inject(BarbeiroService);
+    private readonly barbeariaService = inject(BarbeariaService);
 
     // Estado
     readonly carregando = signal(false);
-    readonly barbeiros = signal<BarbeiroCard[]>([]);
+    readonly barbearias = signal<BarbeariaCard[]>([]);
     readonly localizacaoAtual = signal('Detectando localização...');
     readonly erroLocalizacao = signal<string | null>(null);
 
@@ -65,16 +66,16 @@ export class ExplorarBarbeariasPage implements OnInit {
     // Coordenadas atuais
     private latitudeAtual = -23.5505; // Fallback: São Paulo Centro
     private longitudeAtual = -46.6333;
-    private raioKm = 10;
+    private raioKm = 15;
 
     // Computed
-    readonly barbeirosFiltrados = computed(() => {
+    readonly barbeariasFiltradas = computed(() => {
         const termo = this.termoBusca.toLowerCase();
-        if (!termo) return this.barbeiros();
-        return this.barbeiros().filter(b =>
+        if (!termo) return this.barbearias();
+        return this.barbearias().filter(b =>
             b.nome.toLowerCase().includes(termo) ||
-            (b.especialidades && b.especialidades.toLowerCase().includes(termo)) ||
-            (b.barbeariaNome && b.barbeariaNome.toLowerCase().includes(termo))
+            (b.endereco && b.endereco.toLowerCase().includes(termo)) ||
+            (b.cidade && b.cidade.toLowerCase().includes(termo))
         );
     });
 
@@ -82,13 +83,14 @@ export class ExplorarBarbeariasPage implements OnInit {
         addIcons({
             locationOutline, starOutline, heartOutline, heart,
             mapOutline, listOutline, navigateOutline, storefrontOutline,
-            chevronForwardOutline, notificationsOutline, personOutline
+            chevronForwardOutline, notificationsOutline, peopleOutline,
+            cutOutline, timeOutline
         });
     }
 
     async ngOnInit(): Promise<void> {
         await this.obterLocalizacaoReal();
-        this.carregarBarbeiros();
+        this.carregarBarbearias();
     }
 
     /**
@@ -132,20 +134,20 @@ export class ExplorarBarbeariasPage implements OnInit {
     }
 
     /**
-     * Carrega barbeiros próximos do backend.
+     * Carrega barbearias próximas do backend.
      */
-    carregarBarbeiros(): void {
+    carregarBarbearias(): void {
         this.carregando.set(true);
 
-        this.barbeiroService.buscarProximos(this.latitudeAtual, this.longitudeAtual, this.raioKm)
+        this.barbeariaService.buscarProximas(this.latitudeAtual, this.longitudeAtual, this.raioKm)
             .subscribe({
-                next: (barbeiros) => {
-                    // Converte para BarbeiroCard adicionando campos de UI
-                    const cards: BarbeiroCard[] = barbeiros.map(b => ({
+                next: (barbearias) => {
+                    // Converte para BarbeariaCard adicionando campos de UI
+                    const cards: BarbeariaCard[] = barbearias.map(b => ({
                         ...b,
                         distanciaKm: this.calcularDistancia(
                             this.latitudeAtual, this.longitudeAtual,
-                            b.latitude, b.longitude
+                            b.latitude ?? 0, b.longitude ?? 0
                         ),
                         favorito: false // TODO: Integrar com FavoritosService
                     }));
@@ -153,12 +155,12 @@ export class ExplorarBarbeariasPage implements OnInit {
                     // Ordena por distância
                     cards.sort((a, b) => (a.distanciaKm ?? 0) - (b.distanciaKm ?? 0));
 
-                    this.barbeiros.set(cards);
+                    this.barbearias.set(cards);
                     this.carregando.set(false);
                 },
                 error: (error) => {
-                    console.error('Erro ao carregar barbeiros:', error);
-                    this.barbeiros.set([]);
+                    console.error('Erro ao carregar barbearias:', error);
+                    this.barbearias.set([]);
                     this.carregando.set(false);
                 }
             });
@@ -189,7 +191,7 @@ export class ExplorarBarbeariasPage implements OnInit {
      * Pull-to-refresh handler.
      */
     handleRefresh(event: CustomEvent): void {
-        this.carregarBarbeiros();
+        this.carregarBarbearias();
         // Completa o refresher após um delay para melhor UX
         setTimeout(() => {
             (event.target as HTMLIonRefresherElement).complete();
@@ -200,7 +202,7 @@ export class ExplorarBarbeariasPage implements OnInit {
      * Handler de busca (filtragem local via computed).
      */
     buscar(): void {
-        // O computed barbeirosFiltrados faz a filtragem automaticamente
+        // O computed barbeariasFiltradas faz a filtragem automaticamente
     }
 
     /**
@@ -214,12 +216,12 @@ export class ExplorarBarbeariasPage implements OnInit {
     }
 
     /**
-     * Toggle favorito de um barbeiro.
+     * Toggle favorito de uma barbearia.
      */
-    toggleFavorito(barbeiro: BarbeiroCard, event: Event): void {
+    toggleFavorito(barbearia: BarbeariaCard, event: Event): void {
         event.stopPropagation();
-        this.barbeiros.update(lista =>
-            lista.map(b => b.id === barbeiro.id
+        this.barbearias.update(lista =>
+            lista.map(b => b.id === barbearia.id
                 ? { ...b, favorito: !b.favorito }
                 : b
             )
@@ -228,11 +230,11 @@ export class ExplorarBarbeariasPage implements OnInit {
     }
 
     /**
-     * Abre detalhes do barbeiro.
+     * Abre detalhes da barbearia.
      */
-    abrirBarbeiro(barbeiro: BarbeiroCard): void {
-        // TODO: Navegar para página de detalhes do barbeiro
-        console.log('Abrindo barbeiro:', barbeiro.id, barbeiro.nome);
+    abrirBarbearia(barbearia: BarbeariaCard): void {
+        // TODO: Navegar para página de detalhes da barbearia
+        console.log('Abrindo barbearia:', barbearia.id, barbearia.nome);
     }
 
     /**

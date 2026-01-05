@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { AuthService, TipoUsuario } from './auth.service';
 
 /**
  * Guard funcional para verificar roles específicas.
@@ -24,7 +24,14 @@ export function roleGuard(allowedRoles: string[]): CanActivateFn {
             return router.createUrlTree(['/login']);
         }
 
-        // Verificar roles
+        // Verificar tipo de usuário (mais confiável que roles)
+        const tipoUsuario = authService.getTipoUsuario();
+
+        if (tipoUsuario && allowedRoles.includes(tipoUsuario)) {
+            return true;
+        }
+
+        // Fallback: verificar roles do JWT
         const userRoles = authService.getUserRoles();
         const hasRole = allowedRoles.some(role =>
             userRoles.includes(role) || userRoles.includes(`ROLE_${role}`)
@@ -34,23 +41,36 @@ export function roleGuard(allowedRoles: string[]): CanActivateFn {
             return true;
         }
 
-        // Redirecionar para área correta baseada na role do usuário
-        return router.createUrlTree([getRedirectPath(userRoles)]);
+        // Redirecionar para área correta baseada no tipo de usuário
+        return router.createUrlTree([getRedirectPath(tipoUsuario, userRoles)]);
     };
 }
 
 /**
- * Retorna o path de redirecionamento baseado nas roles do usuário.
+ * Retorna o path de redirecionamento baseado no tipo de usuário.
  */
-function getRedirectPath(roles: string[]): string {
+function getRedirectPath(tipoUsuario: TipoUsuario | null, roles: string[]): string {
+    // Primeiro tenta pelo tipoUsuario
+    if (tipoUsuario === 'ADMIN') {
+        return '/tabs/admin/dashboard';
+    }
+    if (tipoUsuario === 'BARBEIRO') {
+        return '/tabs/barbeiro/fila';
+    }
+    if (tipoUsuario === 'CLIENTE') {
+        return '/tabs/cliente/explorar';
+    }
+
+    // Fallback: verifica pelas roles
     if (roles.includes('ROLE_ADMIN') || roles.includes('ADMIN')) {
-        return '/tabs/admin';
+        return '/tabs/admin/dashboard';
     }
     if (roles.includes('ROLE_BARBEIRO') || roles.includes('BARBEIRO')) {
-        return '/tabs/barbeiro';
+        return '/tabs/barbeiro/fila';
     }
+
     // Default para CLIENTE
-    return '/tabs/explorar';
+    return '/tabs/cliente/explorar';
 }
 
 /**

@@ -7,12 +7,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Entidade Usuario - implementa UserDetails para integração com Spring
  * Security.
+ * Suporta múltiplas roles por usuário.
  */
 @Entity
 @Table(name = "usuarios")
@@ -39,10 +40,23 @@ public class Usuario implements UserDetails {
     @Column(name = "telefone", length = 20)
     private String telefone;
 
+    /**
+     * Roles do usuário (múltiplas permitidas).
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))
+    @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     @Builder.Default
-    private Role role = Role.CLIENTE;
+    private Set<Role> roles = new HashSet<>();
+
+    /**
+     * Role atualmente ativa na sessão.
+     * Usada para determinar qual perfil o usuário está usando.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role_ativa", length = 20)
+    private Role roleAtiva;
 
     @Column(name = "ativo", nullable = false)
     @Builder.Default
@@ -62,11 +76,79 @@ public class Usuario implements UserDetails {
     @Column(name = "ultimo_login")
     private LocalDateTime ultimoLogin;
 
+    // ========== Métodos de Role ==========
+
+    /**
+     * Adiciona uma role ao usuário.
+     */
+    public void adicionarRole(Role role) {
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
+        }
+        this.roles.add(role);
+
+        // Se não tem role ativa, define esta como ativa
+        if (this.roleAtiva == null) {
+            this.roleAtiva = role;
+        }
+    }
+
+    /**
+     * Remove uma role do usuário.
+     */
+    public void removerRole(Role role) {
+        if (this.roles != null) {
+            this.roles.remove(role);
+
+            // Se removeu a role ativa, define outra como ativa
+            if (role == this.roleAtiva && !this.roles.isEmpty()) {
+                this.roleAtiva = this.roles.iterator().next();
+            }
+        }
+    }
+
+    /**
+     * Verifica se usuário possui uma role específica.
+     */
+    public boolean possuiRole(Role role) {
+        return this.roles != null && this.roles.contains(role);
+    }
+
+    /**
+     * Verifica se usuário possui múltiplas roles.
+     */
+    public boolean possuiMultiplasRoles() {
+        return this.roles != null && this.roles.size() > 1;
+    }
+
+    /**
+     * Define a role ativa (para trocar de perfil).
+     */
+    public void trocarRoleAtiva(Role role) {
+        if (possuiRole(role)) {
+            this.roleAtiva = role;
+        } else {
+            throw new IllegalArgumentException("Usuário não possui a role: " + role);
+        }
+    }
+
     // ========== UserDetails Implementation ==========
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        // Retorna apenas a role ativa como authority principal
+        if (roleAtiva != null) {
+            return List.of(new SimpleGrantedAuthority("ROLE_" + roleAtiva.name()));
+        }
+
+        // Fallback: retorna todas as roles
+        if (roles != null && !roles.isEmpty()) {
+            return roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                    .collect(Collectors.toList());
+        }
+
+        return List.of();
     }
 
     @Override
@@ -115,7 +197,7 @@ public class Usuario implements UserDetails {
      * - BARBEIRO: Profissional barbeiro
      */
     public enum Role {
-        ADMIN("Administrador"),
+        ADMIN("Dono de Barbearia"),
         CLIENTE("Cliente"),
         BARBEIRO("Barbeiro");
 

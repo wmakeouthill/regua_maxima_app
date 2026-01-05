@@ -178,10 +178,10 @@ export class RegistrarPage implements OnInit, OnDestroy, AfterViewChecked {
      */
     private getRedirectPath(): string {
         switch (this.tipoUsuario) {
-            case 'ADMIN': return '/tabs/admin';
-            case 'BARBEIRO': return '/tabs/barbeiro';
-            case 'CLIENTE': return '/tabs/explorar';
-            default: return '/tabs/home';
+            case 'ADMIN': return '/tabs/admin/dashboard';
+            case 'BARBEIRO': return '/tabs/barbeiro/fila';
+            case 'CLIENTE': return '/tabs/cliente/explorar';
+            default: return '/tabs/cliente/explorar';
         }
     }
 }
