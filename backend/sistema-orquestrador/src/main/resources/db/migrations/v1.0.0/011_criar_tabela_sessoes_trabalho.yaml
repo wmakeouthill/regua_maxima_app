@@ -1,0 +1,223 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela sessoes_trabalho
+  # Versão: 1.0.0
+  # Data: 2026-01-05
+  # Autor: Sistema
+  # Descrição: Tabela de sessões de trabalho/caixa da barbearia
+  # ========================================================
+
+  - changeSet:
+      id: 011-criar-tabela-sessoes-trabalho
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: sessoes_trabalho
+        - tableExists:
+            tableName: barbearias
+        - tableExists:
+            tableName: usuarios
+      comment: "Cria tabela de sessões de trabalho para gestão de caixa"
+      changes:
+        - createTable:
+            tableName: sessoes_trabalho
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # ========== Identificação da Sessão ==========
+              - column:
+                  name: numero_sessao
+                  type: INT
+                  constraints:
+                    nullable: false
+                  remarks: "Número sequencial da sessão"
+
+              # ========== Vínculo com Barbearia ==========
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Vínculo com Usuário que abriu ==========
+              - column:
+                  name: usuario_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Status da Sessão ==========
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: "ABERTA"
+                  constraints:
+                    nullable: false
+                  remarks: "ABERTA, PAUSADA ou FECHADA"
+
+              # ========== Datas e Horários ==========
+              - column:
+                  name: data_sessao
+                  type: DATE
+                  constraints:
+                    nullable: false
+                  remarks: "Data da sessão"
+
+              - column:
+                  name: data_abertura
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Data/hora de abertura"
+
+              - column:
+                  name: data_fechamento
+                  type: TIMESTAMP
+                  remarks: "Data/hora de fechamento"
+
+              # ========== Valores do Caixa ==========
+              - column:
+                  name: valor_abertura
+                  type: DECIMAL(10,2)
+                  remarks: "Valor inicial no caixa ao abrir"
+
+              - column:
+                  name: valor_fechamento
+                  type: DECIMAL(10,2)
+                  remarks: "Valor final no caixa ao fechar"
+
+              - column:
+                  name: valor_total_vendas
+                  type: DECIMAL(10,2)
+                  defaultValueNumeric: 0
+                  remarks: "Total de vendas/atendimentos"
+
+              - column:
+                  name: quantidade_atendimentos
+                  type: INT
+                  defaultValueNumeric: 0
+                  remarks: "Quantidade de atendimentos realizados"
+
+              # ========== Observações ==========
+              - column:
+                  name: observacoes
+                  type: VARCHAR(500)
+                  remarks: "Observações sobre a sessão"
+
+              # ========== Auditoria ==========
+              - column:
+                  name: data_criacao
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: TIMESTAMP
+
+              # ========== Optimistic Locking ==========
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  remarks: "Para controle de concorrência"
+
+  # ========== Foreign Keys - ChangeSet Separado ==========
+  - changeSet:
+      id: 011-fks-sessoes-trabalho
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: sessoes_trabalho
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_sessao_barbearia
+      comment: "Adiciona foreign keys para tabela sessoes_trabalho"
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: sessoes_trabalho
+            baseColumnNames: barbearia_id
+            constraintName: fk_sessao_barbearia
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: sessoes_trabalho
+            baseColumnNames: usuario_id
+            constraintName: fk_sessao_usuario
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  # ========== Índices para Performance ==========
+  - changeSet:
+      id: 011-indices-sessoes-trabalho
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: sessoes_trabalho
+        - not:
+            indexExists:
+              indexName: idx_sessao_barbearia_status
+      comment: "Cria índices para otimizar consultas de sessões"
+      changes:
+        # Índice para buscar sessão ativa por barbearia
+        - createIndex:
+            tableName: sessoes_trabalho
+            indexName: idx_sessao_barbearia_status
+            columns:
+              - column:
+                  name: barbearia_id
+              - column:
+                  name: status
+
+        # Índice para buscar sessões por data
+        - createIndex:
+            tableName: sessoes_trabalho
+            indexName: idx_sessao_data
+            columns:
+              - column:
+                  name: data_sessao
+              - column:
+                  name: barbearia_id
+
+        # Índice único para garantir apenas uma sessão ativa por barbearia
+        - createIndex:
+            tableName: sessoes_trabalho
+            indexName: idx_sessao_ativa_unica
+            unique: true
+            columns:
+              - column:
+                  name: barbearia_id
+              - column:
+                  name: status
+
+  # ========== Constraint CHECK para Status ==========
+  - changeSet:
+      id: 011-check-status-sessao
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: sessoes_trabalho
+      comment: "Adiciona constraint de valores válidos para status"
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE sessoes_trabalho 
+              ADD CONSTRAINT chk_sessao_status 
+              CHECK (status IN ('ABERTA', 'PAUSADA', 'FECHADA'))
+            rollbackSql: >
+              ALTER TABLE sessoes_trabalho DROP CONSTRAINT IF EXISTS chk_sessao_status

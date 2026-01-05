@@ -13,6 +13,10 @@
 
 .sessao-ativa-card {
     border-left: 4px solid var(--ion-color-success);
+
+    &.pausada {
+        border-left-color: var(--ion-color-warning);
+    }
 }
 
 .sessao-ativa-card ion-card-subtitle {
@@ -20,6 +24,21 @@
     align-items: center;
     gap: 8px;
     color: var(--ion-color-success);
+}
+
+.sessao-ativa-card.pausada ion-card-subtitle {
+    color: var(--ion-color-warning);
+}
+
+.sessao-ativa-card ion-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.sessao-ativa-card ion-card-title ion-badge {
+    font-size: 0.7rem;
 }
 
 .sessao-info {
@@ -50,6 +69,13 @@
 
 .info-row .value {
     font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
 }
 
 .sessao-fechada-card {
@@ -130,7 +156,7 @@
     margin: 0 0 8px 0;
 }
 
-.modal-content > p {
+.modal-content>p {
     color: var(--ion-color-medium);
     margin-bottom: 24px;
 }

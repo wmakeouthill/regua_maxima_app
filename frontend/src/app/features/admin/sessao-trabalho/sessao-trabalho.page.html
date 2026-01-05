@@ -6,99 +6,119 @@
 
 <ion-content>
     @if (carregando()) {
-        <div class="loading-container">
-            <ion-spinner name="crescent"></ion-spinner>
-            <p>Carregando...</p>
-        </div>
+    <div class="loading-container">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Carregando...</p>
+    </div>
     } @else {
-        <!-- Sessão Atual -->
-        <div class="sessao-atual-section">
-            @if (sessaoAtual()) {
-                <ion-card class="sessao-ativa-card">
-                    <ion-card-header>
-                        <ion-card-subtitle>
-                            <ion-icon name="wallet-outline"></ion-icon>
-                            Caixa Aberto
-                        </ion-card-subtitle>
-                        <ion-card-title>
-                            Sessão em Andamento
-                        </ion-card-title>
-                    </ion-card-header>
-                    <ion-card-content>
-                        <div class="sessao-info">
-                            <div class="info-row">
-                                <span class="label">Abertura:</span>
-                                <span class="value">{{ sessaoAtual()!.dataAbertura | date:'dd/MM/yyyy HH:mm' }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">Valor Inicial:</span>
-                                <span class="value">R$ {{ sessaoAtual()!.valorAbertura | number:'1.2-2' }}</span>
-                            </div>
-                            <div class="info-row destaque">
-                                <span class="label">Vendas Hoje:</span>
-                                <span class="value">R$ {{ sessaoAtual()!.valorTotalVendas | number:'1.2-2' }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">Atendimentos:</span>
-                                <span class="value">{{ sessaoAtual()!.quantidadeAtendimentos }}</span>
-                            </div>
-                        </div>
+    <!-- Sessão Atual -->
+    <div class="sessao-atual-section">
+        @if (sessaoAtual() && temSessaoAtiva()) {
+        <ion-card class="sessao-ativa-card" [class.pausada]="sessaoPausada()">
+            <ion-card-header>
+                <ion-card-subtitle>
+                    <ion-icon name="wallet-outline"></ion-icon>
+                    @if (sessaoAberta()) {
+                    Caixa Aberto
+                    } @else if (sessaoPausada()) {
+                    Caixa Pausado
+                    }
+                </ion-card-subtitle>
+                <ion-card-title>
+                    <span>Sessão em Andamento</span>
+                    <ion-badge [color]="getStatusColor(sessaoAtual()!.status)">
+                        {{ getStatusLabel(sessaoAtual()!.status) }}
+                    </ion-badge>
+                </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+                <div class="sessao-info">
+                    <div class="info-row">
+                        <span class="label">Abertura:</span>
+                        <span class="value">{{ sessaoAtual()!.dataAbertura | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Valor Inicial:</span>
+                        <span class="value">R$ {{ sessaoAtual()!.valorAbertura | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="info-row destaque">
+                        <span class="label">Vendas Hoje:</span>
+                        <span class="value">R$ {{ sessaoAtual()!.valorTotalVendas | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Atendimentos:</span>
+                        <span class="value">{{ sessaoAtual()!.quantidadeAtendimentos }}</span>
+                    </div>
+                </div>
 
-                        <ion-button expand="block" color="danger" (click)="abrirModalFechamento()">
-                            <ion-icon name="stop-outline" slot="start"></ion-icon>
-                            Fechar Caixa
-                        </ion-button>
-                    </ion-card-content>
-                </ion-card>
-            } @else {
-                <ion-card class="sessao-fechada-card">
-                    <ion-card-content>
-                        <div class="sessao-fechada-content">
-                            <ion-icon name="wallet-outline"></ion-icon>
-                            <h3>Caixa Fechado</h3>
-                            <p>Abra uma nova sessão para começar a registrar atendimentos</p>
-                            <ion-button expand="block" color="success" (click)="abrirModalAbertura()">
-                                <ion-icon name="play-outline" slot="start"></ion-icon>
-                                Abrir Caixa
-                            </ion-button>
-                        </div>
-                    </ion-card-content>
-                </ion-card>
-            }
-        </div>
-
-        <!-- Histórico de Sessões -->
-        <div class="section-header">
-            <h3>Histórico</h3>
-        </div>
-
-        @if (historicoSessoes().length === 0) {
-            <ion-card class="empty-card">
-                <ion-card-content>
-                    <ion-icon name="receipt-outline"></ion-icon>
-                    <p>Nenhuma sessão registrada</p>
-                </ion-card-content>
-            </ion-card>
+                <div class="action-buttons">
+                    @if (sessaoAberta()) {
+                    <ion-button expand="block" color="warning" (click)="pausarSessao()">
+                        <ion-icon name="pause-outline" slot="start"></ion-icon>
+                        Pausar Caixa
+                    </ion-button>
+                    } @else if (sessaoPausada()) {
+                    <ion-button expand="block" color="success" (click)="retomarSessao()">
+                        <ion-icon name="play-outline" slot="start"></ion-icon>
+                        Retomar Caixa
+                    </ion-button>
+                    }
+                    <ion-button expand="block" color="danger" (click)="abrirModalFechamento()">
+                        <ion-icon name="stop-outline" slot="start"></ion-icon>
+                        Fechar Caixa
+                    </ion-button>
+                </div>
+            </ion-card-content>
+        </ion-card>
         } @else {
-            <ion-list>
-                @for (sessao of historicoSessoes(); track sessao.id) {
-                    <ion-item>
-                        <ion-icon name="receipt-outline" slot="start" color="medium"></ion-icon>
-                        <ion-label>
-                            <h3>{{ sessao.dataAbertura | date:'dd/MM/yyyy' }}</h3>
-                            <p>
-                                {{ sessao.dataAbertura | date:'HH:mm' }} - 
-                                {{ sessao.dataFechamento | date:'HH:mm' }}
-                            </p>
-                        </ion-label>
-                        <div slot="end" class="sessao-resumo">
-                            <span class="valor">R$ {{ sessao.valorTotalVendas | number:'1.2-2' }}</span>
-                            <span class="atendimentos">{{ sessao.quantidadeAtendimentos }} atend.</span>
-                        </div>
-                    </ion-item>
-                }
-            </ion-list>
+        <ion-card class="sessao-fechada-card">
+            <ion-card-content>
+                <div class="sessao-fechada-content">
+                    <ion-icon name="wallet-outline"></ion-icon>
+                    <h3>Caixa Fechado</h3>
+                    <p>Abra uma nova sessão para começar a registrar atendimentos</p>
+                    <ion-button expand="block" color="success" (click)="abrirModalAbertura()">
+                        <ion-icon name="play-outline" slot="start"></ion-icon>
+                        Abrir Caixa
+                    </ion-button>
+                </div>
+            </ion-card-content>
+        </ion-card>
         }
+    </div>
+
+    <!-- Histórico de Sessões -->
+    <div class="section-header">
+        <h3>Histórico</h3>
+    </div>
+
+    @if (historicoSessoes().length === 0) {
+    <ion-card class="empty-card">
+        <ion-card-content>
+            <ion-icon name="receipt-outline"></ion-icon>
+            <p>Nenhuma sessão registrada</p>
+        </ion-card-content>
+    </ion-card>
+    } @else {
+    <ion-list>
+        @for (sessao of historicoSessoes(); track sessao.id) {
+        <ion-item>
+            <ion-icon name="receipt-outline" slot="start" color="medium"></ion-icon>
+            <ion-label>
+                <h3>{{ sessao.dataSessao | date:'dd/MM/yyyy' }}</h3>
+                <p>
+                    {{ sessao.dataAbertura | date:'HH:mm' }} -
+                    {{ sessao.dataFechamento | date:'HH:mm' }}
+                </p>
+            </ion-label>
+            <div slot="end" class="sessao-resumo">
+                <span class="valor">R$ {{ sessao.valorTotalVendas | number:'1.2-2' }}</span>
+                <span class="atendimentos">{{ sessao.quantidadeAtendimentos }} atend.</span>
+            </div>
+        </ion-item>
+        }
+    </ion-list>
+    }
     }
 
     <!-- Modal Abertura de Caixa -->
@@ -121,30 +141,17 @@
                     <p>Informe o valor inicial do caixa</p>
 
                     <ion-item>
-                        <ion-input
-                            type="number"
-                            label="Valor Inicial (R$)"
-                            labelPlacement="floating"
-                            [(ngModel)]="valorAbertura"
-                            placeholder="0.00"
-                        ></ion-input>
+                        <ion-input type="number" label="Valor Inicial (R$)" labelPlacement="floating"
+                            [(ngModel)]="valorAbertura" placeholder="0.00"></ion-input>
                     </ion-item>
 
                     <ion-item>
-                        <ion-textarea
-                            label="Observações (opcional)"
-                            labelPlacement="floating"
-                            [(ngModel)]="observacoesAbertura"
-                            rows="2"
-                        ></ion-textarea>
+                        <ion-textarea label="Observações (opcional)" labelPlacement="floating"
+                            [(ngModel)]="observacoesAbertura" rows="2"></ion-textarea>
                     </ion-item>
 
-                    <ion-button 
-                        expand="block" 
-                        color="success" 
-                        (click)="confirmarAbertura()"
-                        [disabled]="valorAbertura === null || valorAbertura < 0"
-                    >
+                    <ion-button expand="block" color="success" (click)="confirmarAbertura()"
+                        [disabled]="valorAbertura === null || valorAbertura < 0">
                         <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
                         Confirmar Abertura
                     </ion-button>
@@ -170,58 +177,48 @@
                 <div class="modal-content">
                     <ion-icon name="cash-outline" class="modal-icon"></ion-icon>
                     <h2>Fechar Sessão</h2>
-                    
+
                     @if (sessaoAtual()) {
-                        <div class="fechamento-resumo">
-                            <div class="resumo-item">
-                                <span>Valor Inicial:</span>
-                                <span>R$ {{ sessaoAtual()!.valorAbertura | number:'1.2-2' }}</span>
-                            </div>
-                            <div class="resumo-item">
-                                <span>Vendas:</span>
-                                <span>R$ {{ sessaoAtual()!.valorTotalVendas | number:'1.2-2' }}</span>
-                            </div>
-                            <div class="resumo-item destaque">
-                                <span>Esperado:</span>
-                                <span>R$ {{ (sessaoAtual()!.valorAbertura + sessaoAtual()!.valorTotalVendas) | number:'1.2-2' }}</span>
-                            </div>
+                    <div class="fechamento-resumo">
+                        <div class="resumo-item">
+                            <span>Valor Inicial:</span>
+                            <span>R$ {{ sessaoAtual()!.valorAbertura | number:'1.2-2' }}</span>
                         </div>
+                        <div class="resumo-item">
+                            <span>Vendas:</span>
+                            <span>R$ {{ sessaoAtual()!.valorTotalVendas | number:'1.2-2' }}</span>
+                        </div>
+                        <div class="resumo-item destaque">
+                            <span>Esperado:</span>
+                            <span>R$ {{ (sessaoAtual()!.valorAbertura + sessaoAtual()!.valorTotalVendas) |
+                                number:'1.2-2' }}</span>
+                        </div>
+                    </div>
                     }
 
                     <ion-item>
-                        <ion-input
-                            type="number"
-                            label="Valor Final no Caixa (R$)"
-                            labelPlacement="floating"
-                            [(ngModel)]="valorFechamento"
-                            placeholder="0.00"
-                        ></ion-input>
+                        <ion-input type="number" label="Valor Final no Caixa (R$)" labelPlacement="floating"
+                            [(ngModel)]="valorFechamento" placeholder="0.00"></ion-input>
                     </ion-item>
 
                     @if (diferencaCaixa() !== 0) {
-                        <div class="diferenca-aviso" [class.positivo]="diferencaCaixa() > 0" [class.negativo]="diferencaCaixa() < 0">
-                            <ion-icon [name]="diferencaCaixa() > 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'"></ion-icon>
-                            <span>
-                                Diferença: R$ {{ diferencaCaixa() | number:'1.2-2' }}
-                            </span>
-                        </div>
+                    <div class="diferenca-aviso" [class.positivo]="diferencaCaixa() > 0"
+                        [class.negativo]="diferencaCaixa() < 0">
+                        <ion-icon
+                            [name]="diferencaCaixa() > 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'"></ion-icon>
+                        <span>
+                            Diferença: R$ {{ diferencaCaixa() | number:'1.2-2' }}
+                        </span>
+                    </div>
                     }
 
                     <ion-item>
-                        <ion-textarea
-                            label="Observações (opcional)"
-                            labelPlacement="floating"
-                            [(ngModel)]="observacoesFechamento"
-                            rows="2"
-                        ></ion-textarea>
+                        <ion-textarea label="Observações (opcional)" labelPlacement="floating"
+                            [(ngModel)]="observacoesFechamento" rows="2"></ion-textarea>
                     </ion-item>
 
-                    <ion-button 
-                        expand="block" 
-                        color="danger" 
-                        (click)="confirmarFechamento()"
-                        [disabled]="valorFechamento === null || valorFechamento < 0"
-                    >
+                    <ion-button expand="block" color="danger" (click)="confirmarFechamento()"
+                        [disabled]="valorFechamento === null || valorFechamento < 0">
                         <ion-icon name="stop-outline" slot="start"></ion-icon>
                         Confirmar Fechamento
                     </ion-button>

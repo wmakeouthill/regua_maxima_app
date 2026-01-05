@@ -1,3 +1,4 @@
+/* Tab Bar Styling */
 ion-tab-bar {
     --background: var(--ion-tab-bar-background);
 }
@@ -5,16 +6,36 @@ ion-tab-bar {
 ion-tab-button {
     --color: var(--ion-color-medium);
     --color-selected: var(--ion-color-secondary);
-    --padding-top: 8px;
-    --padding-bottom: 8px;
 }
 
 ion-tab-button ion-icon {
-    font-size: 24px;
+    font-size: 22px;
 }
 
 ion-tab-button ion-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
-    margin-top: 4px;
+    line-height: 1.2;
+    overflow: visible !important;
+}
+
+/* Fix crítico: garantir que labels não sejam cortados */
+:host ::ng-deep {
+    ion-tab-bar {
+        padding-bottom: env(safe-area-inset-bottom, 8px);
+    }
+
+    ion-tab-button {
+        overflow: visible !important;
+
+        .button-native {
+            overflow: visible !important;
+        }
+
+        ion-label {
+            overflow: visible !important;
+            text-overflow: unset !important;
+            white-space: nowrap !important;
+        }
+    }
 }

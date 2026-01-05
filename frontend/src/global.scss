@@ -38,7 +38,12 @@ body {
     color: var(--ion-text-color);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: var(--font-family-heading);
     font-weight: 600;
     color: var(--ion-color-tertiary);
@@ -118,7 +123,8 @@ ion-item.item-has-focus {
     --highlight-background: var(--ion-color-secondary);
 }
 
-ion-input, ion-textarea {
+ion-input,
+ion-textarea {
     --placeholder-color: var(--ion-color-medium);
     --placeholder-opacity: 0.7;
     font-size: 16px;
@@ -144,13 +150,14 @@ ion-tab-bar {
     --background: var(--ion-tab-bar-background);
     --border: 1px solid var(--border-color);
     border-top: 1px solid var(--border-color);
-    padding-bottom: var(--ion-safe-area-bottom, 0);
     box-shadow: 0 -4px 20px var(--shadow-color);
+    padding-bottom: env(safe-area-inset-bottom, 8px);
 }
 
 ion-tab-button {
     --color: var(--ion-color-medium);
     --color-selected: var(--ion-color-secondary);
+    overflow: visible;
 }
 
 ion-tab-button.tab-selected ion-icon {
@@ -159,7 +166,9 @@ ion-tab-button.tab-selected ion-icon {
 
 ion-tab-button ion-label {
     font-weight: 500;
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 1.2;
+    overflow: visible;
 }
 
 ion-spinner {
@@ -204,17 +213,15 @@ ion-spinner {
 }
 
 .barbershop-stripe {
-    background: repeating-linear-gradient(
-        45deg,
-        var(--ion-color-danger),
-        var(--ion-color-danger) 10px,
-        #ffffff 10px,
-        #ffffff 20px,
-        var(--ion-color-primary) 20px,
-        var(--ion-color-primary) 30px,
-        #ffffff 30px,
-        #ffffff 40px
-    );
+    background: repeating-linear-gradient(45deg,
+            var(--ion-color-danger),
+            var(--ion-color-danger) 10px,
+            #ffffff 10px,
+            #ffffff 20px,
+            var(--ion-color-primary) 20px,
+            var(--ion-color-primary) 30px,
+            #ffffff 30px,
+            #ffffff 40px);
     height: 8px;
     width: 100%;
 }
@@ -539,6 +546,7 @@ ion-spinner {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -546,9 +554,12 @@ ion-spinner {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.05);
     }
@@ -569,11 +580,11 @@ ion-spinner {
     .auth-container {
         padding: 48px 24px;
     }
-    
+
     .auth-header h1 {
         font-size: 32px;
     }
-    
+
     ion-card {
         margin: 24px;
     }

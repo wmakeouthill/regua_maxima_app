@@ -1,45 +1,26 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
     IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle,
     IonIcon, IonButton, IonSpinner, IonButtons,
     IonList, IonItem, IonLabel,
-    IonModal, IonInput, IonTextarea
+    IonModal, IonInput, IonTextarea, IonBadge
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
     walletOutline, playOutline, stopOutline, cashOutline,
     receiptOutline, alertCircleOutline,
-    checkmarkCircleOutline, closeCircleOutline
+    checkmarkCircleOutline, closeCircleOutline,
+    pauseOutline
 } from 'ionicons/icons';
-
-/**
- * Status da sessão de trabalho
- */
-type StatusSessao = 'ABERTA' | 'FECHADA';
-
-/**
- * Interface para sessão de trabalho
- */
-interface SessaoTrabalho {
-    id: string;
-    usuarioId: string;
-    usuarioNome: string;
-    dataAbertura: Date;
-    dataFechamento?: Date;
-    valorAbertura: number;
-    valorFechamento?: number;
-    valorTotalVendas: number;
-    quantidadeAtendimentos: number;
-    status: StatusSessao;
-    observacoes?: string;
-}
+import { SessaoTrabalhoService, SessaoTrabalho, StatusSessao } from '../../../core/services/sessao-trabalho.service';
+import { BarbeariaService } from '../../../core/services/barbearia.service';
 
 /**
  * Página de Sessão de Trabalho do Admin.
- * Gerencia abertura/fechamento de caixa.
+ * Gerencia abertura/fechamento/pausa de caixa.
  */
 @Component({
     selector: 'app-sessao-trabalho',
@@ -50,17 +31,23 @@ interface SessaoTrabalho {
         IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle,
         IonIcon, IonButton, IonSpinner, IonButtons,
         IonList, IonItem, IonLabel,
-        IonModal, IonInput, IonTextarea
+        IonModal, IonInput, IonTextarea, IonBadge
     ],
     templateUrl: './sessao-trabalho.page.html',
     styleUrl: './sessao-trabalho.page.scss',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SessaoTrabalhoPage implements OnInit {
-    // Estado
-    readonly carregando = signal(false);
-    readonly sessaoAtual = signal<SessaoTrabalho | null>(null);
-    readonly historicoSessoes = signal<SessaoTrabalho[]>([]);
+    private readonly sessaoService = inject(SessaoTrabalhoService);
+    private readonly barbeariaService = inject(BarbeariaService);
+
+    // Estado do serviço (delegado)
+    readonly carregando = this.sessaoService.carregando;
+    readonly sessaoAtual = this.sessaoService.sessaoAtual;
+    readonly historicoSessoes = this.sessaoService.historicoSessoes;
+    readonly erro = this.sessaoService.erro;
+
+    // Modais
     readonly mostrarModalAbertura = signal(false);
     readonly mostrarModalFechamento = signal(false);
 
@@ -82,11 +69,19 @@ export class SessaoTrabalhoPage implements OnInit {
         return this.valorFechamento - this.valorEsperado();
     });
 
+    readonly sessaoAberta = computed(() => this.sessaoAtual()?.status === 'ABERTA');
+    readonly sessaoPausada = computed(() => this.sessaoAtual()?.status === 'PAUSADA');
+    readonly temSessaoAtiva = computed(() => !!this.sessaoAtual() && this.sessaoAtual()?.status !== 'FECHADA');
+
+    // Barbearia do usuário
+    private barbeariaId: number | null = null;
+
     constructor() {
         addIcons({
             walletOutline, playOutline, stopOutline, cashOutline,
             receiptOutline, alertCircleOutline,
-            checkmarkCircleOutline, closeCircleOutline
+            checkmarkCircleOutline, closeCircleOutline,
+            pauseOutline
         });
     }
 
@@ -95,51 +90,21 @@ export class SessaoTrabalhoPage implements OnInit {
     }
 
     carregarDados(): void {
-        this.carregando.set(true);
-
-        // TODO: Integrar com SessaoService real
-        setTimeout(() => {
-            this.sessaoAtual.set({
-                id: '1',
-                usuarioId: 'u1',
-                usuarioNome: 'Admin',
-                dataAbertura: new Date(Date.now() - 4 * 60 * 60000),
-                valorAbertura: 200,
-                valorTotalVendas: 485,
-                quantidadeAtendimentos: 12,
-                status: 'ABERTA'
-            });
-
-            this.historicoSessoes.set([
-                {
-                    id: '2',
-                    usuarioId: 'u1',
-                    usuarioNome: 'Admin',
-                    dataAbertura: new Date(Date.now() - 24 * 60 * 60000),
-                    dataFechamento: new Date(Date.now() - 16 * 60 * 60000),
-                    valorAbertura: 150,
-                    valorFechamento: 720,
-                    valorTotalVendas: 570,
-                    quantidadeAtendimentos: 15,
-                    status: 'FECHADA'
-                },
-                {
-                    id: '3',
-                    usuarioId: 'u1',
-                    usuarioNome: 'Admin',
-                    dataAbertura: new Date(Date.now() - 48 * 60 * 60000),
-                    dataFechamento: new Date(Date.now() - 40 * 60 * 60000),
-                    valorAbertura: 100,
-                    valorFechamento: 410,
-                    valorTotalVendas: 310,
-                    quantidadeAtendimentos: 8,
-                    status: 'FECHADA'
+        // Primeiro buscar a barbearia do usuário
+        this.barbeariaService.buscarMinha().subscribe({
+            next: (barbearia: { id: number }) => {
+                if (barbearia) {
+                    this.barbeariaId = barbearia.id;
+                    this.sessaoService.carregarDados(barbearia.id);
                 }
-            ]);
-
-            this.carregando.set(false);
-        }, 500);
+            },
+            error: () => {
+                // Usuário não tem barbearia configurada
+            }
+        });
     }
+
+    // ========== Modal Abertura ==========
 
     abrirModalAbertura(): void {
         this.valorAbertura = 0;
@@ -151,6 +116,26 @@ export class SessaoTrabalhoPage implements OnInit {
         this.mostrarModalAbertura.set(false);
     }
 
+    confirmarAbertura(): void {
+        if (this.valorAbertura === null || this.valorAbertura < 0) return;
+        if (!this.barbeariaId) return;
+
+        this.sessaoService.abrirSessao({
+            barbeariaId: this.barbeariaId,
+            valorAbertura: this.valorAbertura,
+            observacoes: this.observacoesAbertura || undefined
+        }).subscribe({
+            next: () => {
+                this.fecharModalAbertura();
+            },
+            error: (err) => {
+                console.error('Erro ao abrir sessão:', err);
+            }
+        });
+    }
+
+    // ========== Modal Fechamento ==========
+
     abrirModalFechamento(): void {
         this.valorFechamento = null;
         this.observacoesFechamento = '';
@@ -161,45 +146,62 @@ export class SessaoTrabalhoPage implements OnInit {
         this.mostrarModalFechamento.set(false);
     }
 
-    confirmarAbertura(): void {
-        if (this.valorAbertura === null || this.valorAbertura < 0) return;
-
-        // TODO: Chamar serviço para abrir caixa
-        console.log('Abrindo caixa com valor:', this.valorAbertura);
-
-        const novaSessao: SessaoTrabalho = {
-            id: Date.now().toString(),
-            usuarioId: 'u1',
-            usuarioNome: 'Admin',
-            dataAbertura: new Date(),
-            valorAbertura: this.valorAbertura,
-            valorTotalVendas: 0,
-            quantidadeAtendimentos: 0,
-            status: 'ABERTA',
-            observacoes: this.observacoesAbertura
-        };
-
-        this.sessaoAtual.set(novaSessao);
-        this.fecharModalAbertura();
-    }
-
     confirmarFechamento(): void {
         if (this.valorFechamento === null || this.valorFechamento < 0) return;
-        if (!this.sessaoAtual()) return;
+        if (!this.barbeariaId) return;
 
-        // TODO: Chamar serviço para fechar caixa
-        console.log('Fechando caixa com valor:', this.valorFechamento);
-
-        const sessaoFechada: SessaoTrabalho = {
-            ...this.sessaoAtual()!,
-            dataFechamento: new Date(),
+        this.sessaoService.fecharSessao(this.barbeariaId, {
             valorFechamento: this.valorFechamento,
-            status: 'FECHADA',
-            observacoes: this.observacoesFechamento
-        };
+            observacoes: this.observacoesFechamento || undefined
+        }).subscribe({
+            next: () => {
+                this.fecharModalFechamento();
+            },
+            error: (err) => {
+                console.error('Erro ao fechar sessão:', err);
+            }
+        });
+    }
 
-        this.historicoSessoes.update(lista => [sessaoFechada, ...lista]);
-        this.sessaoAtual.set(null);
-        this.fecharModalFechamento();
+    // ========== Pausar / Retomar ==========
+
+    pausarSessao(): void {
+        if (!this.barbeariaId) return;
+
+        this.sessaoService.pausarSessao(this.barbeariaId).subscribe({
+            error: (err) => {
+                console.error('Erro ao pausar sessão:', err);
+            }
+        });
+    }
+
+    retomarSessao(): void {
+        if (!this.barbeariaId) return;
+
+        this.sessaoService.retomarSessao(this.barbeariaId).subscribe({
+            error: (err) => {
+                console.error('Erro ao retomar sessão:', err);
+            }
+        });
+    }
+
+    // ========== Helpers ==========
+
+    getStatusLabel(status: StatusSessao): string {
+        switch (status) {
+            case 'ABERTA': return 'Aberto';
+            case 'PAUSADA': return 'Pausado';
+            case 'FECHADA': return 'Fechado';
+            default: return status;
+        }
+    }
+
+    getStatusColor(status: StatusSessao): string {
+        switch (status) {
+            case 'ABERTA': return 'success';
+            case 'PAUSADA': return 'warning';
+            case 'FECHADA': return 'medium';
+            default: return 'medium';
+        }
     }
 }
