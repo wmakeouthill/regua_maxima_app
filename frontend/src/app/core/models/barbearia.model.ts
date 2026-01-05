@@ -15,6 +15,9 @@ export interface Barbearia {
     telefone?: string;
     whatsapp?: string;
     email?: string;
+    emailContato?: string;
+    sobre?: string;
+    bairro?: string;
     instagram?: string;
     fotoUrl?: string;
     bannerUrl?: string;

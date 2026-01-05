@@ -29,11 +29,10 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
     CommonModule,
     ReactiveFormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonList, IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
+    IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
     IonButton, IonSpinner, IonText, IonIcon, IonCard, IonCardHeader, IonCardTitle,
     IonCardContent, IonToggle, EnderecoAutocompleteComponent, MapaComponent
   ],
-    ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
@@ -48,77 +47,64 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
       @if (carregando()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>Carregando...</p>
+          <p>Carregando informações...</p>
         </div>
       } @else {
         <form [formGroup]="form" (ngSubmit)="salvar()">
-          <!-- Informações Básicas -->
+          
+          <!-- Dados Básicos -->
           <ion-card>
             <ion-card-header>
               <ion-card-title>
                 <ion-icon name="business-outline"></ion-icon>
-                Informações Básicas
+                Dados Básicos
               </ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
+              <ion-list lines="none">
                 <ion-item>
                   <ion-input
                     formControlName="nome"
-                    label="Nome da Barbearia *"
-                    labelPlacement="stacked"
-                    placeholder="Ex: Barbearia do João"
-                    [clearInput]="true"
+                    label="Nome da Barbearia"
+                    labelPlacement="floating"
+                    placeholder="Ex: Barbearia do Silva"
                   ></ion-input>
                 </ion-item>
-                @if (form.get('nome')?.touched && form.get('nome')?.errors) {
+                @if (form.get('nome')?.touched && form.get('nome')?.errors?.['required']) {
                   <ion-text color="danger" class="error-text">
-                    <small>Nome é obrigatório (2-100 caracteres)</small>
+                    <small>Nome é obrigatório</small>
                   </ion-text>
                 }
 
                 <ion-item>
                   <ion-textarea
-                    formControlName="descricao"
-                    label="Descrição"
-                    labelPlacement="stacked"
+                    formControlName="sobre"
+                    label="Sobre"
+                    labelPlacement="floating"
+                    rows="3"
                     placeholder="Descreva sua barbearia..."
-                    [autoGrow]="true"
-                    [rows]="3"
                   ></ion-textarea>
                 </ion-item>
               </ion-list>
             </ion-card-content>
           </ion-card>
 
-          <!-- Endereço -->
+          <!-- Localização -->
           <ion-card>
             <ion-card-header>
               <ion-card-title>
                 <ion-icon name="location-outline"></ion-icon>
-                Endereço
+                Localização
               </ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
-                <ion-item lines="none" class="autocomplete-item">
-                  <app-endereco-autocomplete
-                    (localizacaoSelecionada)="onEnderecoSelecionado($event)"
-                    label="Buscar Endereço e Preencher"
-                  ></app-endereco-autocomplete>
-                </ion-item>
+              
+              <!-- Map Integration -->
+              <app-endereco-autocomplete
+                 (localizacaoSelecionada)="onEnderecoSelecionado($event)"
+              ></app-endereco-autocomplete>
 
-                <ion-item>
-                  <ion-input
-                    formControlName="endereco"
-                    label="Endereço Completo *"
-                    labelPlacement="stacked"
-                    placeholder="Rua, número, bairro"
-                  ></ion-input>
-                </ion-item>
-
-                <!-- Mapa Preview -->
-                <div class="map-preview ion-margin-bottom">
+              <div class="map-preview ion-margin-bottom">
                   <app-mapa
                     [center]="mapCenter"
                     [markers]="mapMarkers"
@@ -127,44 +113,64 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
                     (mapClick)="onMapClick($event)"
                   ></app-mapa>
                   <p class="ion-text-center ion-no-margin">
-                    <small class="text-medium">Toque no mapa para ajustar a localização exata</small>
+                    <small class="text-medium">Você pode ajustar o pino no mapa clicando no local exato.</small>
                   </p>
+              </div>
+
+              <ion-list lines="none">
+                <ion-item>
+                  <ion-input
+                    formControlName="endereco"
+                    label="Endereço Completo"
+                    labelPlacement="floating"
+                    placeholder="Rua, Número, Bairro"
+                  ></ion-input>
+                </ion-item>
+
+                <div class="form-row">
+                  <ion-item class="flex-item">
+                    <ion-input
+                      formControlName="cidade"
+                      label="Cidade"
+                      labelPlacement="floating"
+                    ></ion-input>
+                  </ion-item>
+
+                  <ion-item class="flex-item-small">
+                    <ion-select
+                      formControlName="estado"
+                      label="UF"
+                      labelPlacement="floating"
+                      interface="popover"
+                    >
+                      @for (uf of estados; track uf) {
+                        <ion-select-option [value]="uf">{{ uf }}</ion-select-option>
+                      }
+                    </ion-select>
+                  </ion-item>
+                </div>
+                
+                <div class="form-row">
+                    <ion-item class="flex-item">
+                        <ion-input
+                          formControlName="latitude"
+                          type="number"
+                          label="Latitude"
+                          labelPlacement="floating"
+                          step="0.000001"
+                        ></ion-input>
+                    </ion-item>
+                    <ion-item class="flex-item">
+                        <ion-input
+                          formControlName="longitude"
+                          type="number"
+                          label="Longitude"
+                          labelPlacement="floating"
+                          step="0.000001"
+                        ></ion-input>
+                    </ion-item>
                 </div>
 
-                <ion-item>
-                  <ion-input
-                    formControlName="cidade"
-                    label="Cidade *"
-                    labelPlacement="stacked"
-                    placeholder="Cidade"
-                  ></ion-input>
-                </ion-item>
-
-                <ion-item>
-                  <ion-select
-                    formControlName="estado"
-                    label="Estado *"
-                    labelPlacement="stacked"
-                    placeholder="Selecione"
-                    interface="action-sheet"
-                  >
-                    @for (estado of estados; track estado.sigla) {
-                      <ion-select-option [value]="estado.sigla">
-                        {{ estado.nome }}
-                      </ion-select-option>
-                    }
-                  </ion-select>
-                </ion-item>
-
-                <ion-item>
-                  <ion-input
-                    formControlName="cep"
-                    label="CEP"
-                    labelPlacement="stacked"
-                    placeholder="00000-000"
-                    [maxlength]="10"
-                  ></ion-input>
-                </ion-item>
               </ion-list>
             </ion-card-content>
           </ion-card>
@@ -178,15 +184,15 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
               </ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
+              <ion-list lines="none">
                 <ion-item>
                   <ion-icon name="call-outline" slot="start"></ion-icon>
                   <ion-input
                     formControlName="telefone"
-                    label="Telefone"
-                    labelPlacement="stacked"
-                    placeholder="(00) 0000-0000"
                     type="tel"
+                    label="Telefone"
+                    labelPlacement="floating"
+                    placeholder="(11) 99999-9999"
                   ></ion-input>
                 </ion-item>
 
@@ -194,21 +200,21 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
                   <ion-icon name="logo-whatsapp" slot="start" color="success"></ion-icon>
                   <ion-input
                     formControlName="whatsapp"
-                    label="WhatsApp"
-                    labelPlacement="stacked"
-                    placeholder="(00) 00000-0000"
                     type="tel"
+                    label="WhatsApp"
+                    labelPlacement="floating"
+                    placeholder="(11) 99999-9999"
                   ></ion-input>
                 </ion-item>
 
                 <ion-item>
                   <ion-icon name="mail-outline" slot="start"></ion-icon>
                   <ion-input
-                    formControlName="email"
-                    label="E-mail"
-                    labelPlacement="stacked"
-                    placeholder="contato@barbearia.com"
+                    formControlName="emailContato"
                     type="email"
+                    label="E-mail Público"
+                    labelPlacement="floating"
+                    placeholder="contato@barbearia.com"
                   ></ion-input>
                 </ion-item>
 
@@ -217,7 +223,7 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
                   <ion-input
                     formControlName="instagram"
                     label="Instagram"
-                    labelPlacement="stacked"
+                    labelPlacement="floating"
                     placeholder="@suabarbearia"
                   ></ion-input>
                 </ion-item>
@@ -225,45 +231,36 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
             </ion-card-content>
           </ion-card>
 
-          <!-- Status (apenas se já existe) -->
-          @if (possuiBarbearia()) {
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>
-                  <ion-icon name="checkmark-circle-outline"></ion-icon>
-                  Status
-                </ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <ion-item>
-                  <ion-label>
-                    <h2>Barbearia Ativa</h2>
-                    <p>Quando desativada, não aparece nas buscas</p>
-                  </ion-label>
-                  <ion-toggle 
-                    [checked]="barbearia()?.ativo" 
-                    (ionChange)="toggleAtivo($event)"
-                  ></ion-toggle>
-                </ion-item>
-              </ion-card-content>
-            </ion-card>
-          }
+          <!-- Status -->
+          <ion-card>
+            <ion-card-content>
+               <ion-item lines="none">
+                  <ion-toggle formControlName="ativo">Barbearia Ativa</ion-toggle>
+               </ion-item>
+               <ion-text color="medium" class="ion-padding-start">
+                 <small>Se desativada, a barbearia não aparecerá para os clientes.</small>
+               </ion-text>
+            </ion-card-content>
+          </ion-card>
 
-          <!-- Botões -->
+          <!-- Botões de Ação -->
           <div class="action-buttons">
             <ion-button 
-              expand="block" 
-              type="submit" 
-              [disabled]="form.invalid || salvando()"
+               expand="block" 
+               type="submit" 
+               [disabled]="!form.valid || salvando()"
+               class="ion-margin-bottom"
             >
               @if (salvando()) {
-                <ion-spinner name="crescent"></ion-spinner>
+                <ion-spinner name="crescent" slot="start"></ion-spinner>
+                Salvando...
               } @else {
                 <ion-icon name="save-outline" slot="start"></ion-icon>
-                {{ possuiBarbearia() ? 'Salvar Alterações' : 'Cadastrar Barbearia' }}
+                {{ possuiBarbearia() ? 'Atualizar Barbearia' : 'Criar Barbearia' }}
               }
             </ion-button>
           </div>
+
         </form>
       }
     </ion-content>
@@ -287,7 +284,7 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
       align-items: center;
       gap: 8px;
       font-size: 1.1rem;
-
+      
       ion-icon {
         font-size: 1.3rem;
       }
@@ -303,54 +300,63 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
       margin-bottom: 32px;
     }
 
-    .autocomplete-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-      margin-bottom: 16px;
+    .form-row {
+      display: flex;
+      gap: 8px;
     }
 
+    .flex-item {
+      flex: 1;
+    }
+
+    .flex-item-small {
+      width: 80px;
+    }
+    
     .map-preview {
       border-radius: 8px;
       overflow: hidden;
       border: 1px solid var(--ion-color-light-shade);
       margin: 0 16px 16px 16px;
     }
-
+    
     .text-medium {
-      color: var(--ion-color-medium);
+       color: var(--ion-color-medium);
     }
   `]
 })
 export class MinhaBarbeariaPage implements OnInit {
-  private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
-  private readonly barbeariaService = inject(BarbeariaService);
-  private readonly toastController = inject(ToastController);
-  private readonly alertController = inject(AlertController);
+  private fb = inject(FormBuilder);
+  private barbeariaService = inject(BarbeariaService);
+  private router = inject(Router);
+  private toastController = inject(ToastController);
 
-  readonly estados = ESTADOS_BR;
-  readonly carregando = this.barbeariaService.carregando;
-  readonly possuiBarbearia = this.barbeariaService.possuiBarbearia;
-  readonly barbearia = this.barbeariaService.minhaBarbearia;
-  readonly salvando = signal(false);
+  carregando = signal(true);
+  salvando = signal(false);
+  possuiBarbearia = signal(false);
+  barbeariaId = signal<number | null>(null);
 
-  // Map State
+  estados = ESTADOS_BR;
+
+  // Map state
   mapCenter: google.maps.LatLngLiteral = { lat: -23.550520, lng: -46.633308 };
   mapMarkers: MapMarkerOptions[] = [];
 
   form: FormGroup = this.fb.group({
-    nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    descricao: ['', [Validators.maxLength(500)]],
-    endereco: ['', [Validators.required, Validators.maxLength(255)]],
-    cidade: ['', [Validators.required, Validators.maxLength(100)]],
-    estado: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
-    cep: ['', [Validators.maxLength(10)]],
-    telefone: ['', [Validators.maxLength(20)]],
-    whatsapp: ['', [Validators.maxLength(20)]],
-    email: ['', [Validators.email, Validators.maxLength(100)]],
-    instagram: ['', [Validators.maxLength(100)]],
+    nome: ['', Validators.required],
+    sobre: [''],
+    endereco: ['', Validators.required],
+    bairro: [''],
+    cidade: ['', Validators.required],
+    estado: ['', Validators.required],
+    cep: [''],
     latitude: [null],
-    longitude: [null]
+    longitude: [null],
+    telefone: ['', Validators.required],
+    whatsapp: [''],
+    emailContato: ['', [Validators.email]],
+    instagram: [''],
+    ativo: [true]
   });
 
   constructor() {
@@ -360,37 +366,46 @@ export class MinhaBarbeariaPage implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.carregarBarbearia();
+  ngOnInit() {
+    this.carregarDados();
   }
 
-  private carregarBarbearia(): void {
+  carregarDados() {
+    this.carregando.set(true);
     this.barbeariaService.buscarMinha().subscribe({
       next: (barbearia) => {
-        this.preencherFormulario(barbearia);
-      },
-      error: (err) => {
-        if (err.status !== 404) {
-          this.mostrarToast('Erro ao carregar barbearia', 'danger');
+        if (barbearia) {
+          this.possuiBarbearia.set(true);
+          this.barbeariaId.set(barbearia.id);
+          this.preencherFormulario(barbearia);
+        } else {
+          this.possuiBarbearia.set(false);
         }
+        this.carregando.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar barbearia', error);
+        this.carregando.set(false);
       }
     });
   }
 
-  private preencherFormulario(barbearia: Barbearia): void {
+  preencherFormulario(barbearia: Barbearia) {
     this.form.patchValue({
       nome: barbearia.nome,
-      descricao: barbearia.descricao,
+      sobre: barbearia.sobre,
       endereco: barbearia.endereco,
+      bairro: barbearia.bairro,
       cidade: barbearia.cidade,
       estado: barbearia.estado,
       cep: barbearia.cep,
+      latitude: barbearia.latitude,
+      longitude: barbearia.longitude,
       telefone: barbearia.telefone,
       whatsapp: barbearia.whatsapp,
-      email: barbearia.email,
+      emailContato: barbearia.emailContato,
       instagram: barbearia.instagram,
-      latitude: barbearia.latitude,
-      longitude: barbearia.longitude
+      ativo: barbearia.ativo
     });
 
     if (barbearia.latitude && barbearia.longitude) {
@@ -399,16 +414,9 @@ export class MinhaBarbeariaPage implements OnInit {
   }
 
   onEnderecoSelecionado(loc: GeoLocation) {
-    // Preencher campos de endereço se disponíveis
-    // A API retorna o endereço formatado completo, precisamos parsear ou usar o que temos.
-    // O componente autocomplete já retorna o local com coordenadas.
-
-    // Tenta extrair cidade/estado do endereço formatado se possível (simples)
-    // Ou idealmente o GoogleMapsService poderia retornar componentes estruturados.
-    // Por enquanto vamos preencher o endereço completo no campo endereço e as coordenadas.
-
     this.form.patchValue({
-      endereco: loc.address, // O endereço completo
+      endereco: loc.address, // O endereço completo ou parte dele
+      // Idealmente parsearíamos os componentes do endereço se necessário
       latitude: loc.lat,
       longitude: loc.lng
     });
@@ -429,88 +437,56 @@ export class MinhaBarbeariaPage implements OnInit {
     this.mapMarkers = [{
       position: coords,
       title: 'Localização da Barbearia',
-      options: { draggable: true } // Visual only, drag events to be handled if needed
+      options: { draggable: true }
     }];
   }
 
-  salvar(): void {
-    if (this.form.invalid) return;
+  salvar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.salvando.set(true);
     const dados = this.form.value;
 
     if (this.possuiBarbearia()) {
-      // Atualizar
-      const dto: AtualizarBarbeariaDTO = dados;
-      this.barbeariaService.atualizar(dto).subscribe({
-        next: () => {
-          this.salvando.set(false);
-          this.mostrarToast('Barbearia atualizada com sucesso!', 'success');
-        },
-        error: (err) => {
-          this.salvando.set(false);
-          this.mostrarToast(err.error?.erro || 'Erro ao atualizar', 'danger');
-        }
-      });
-    } else {
-      // Criar
-      const dto: CriarBarbeariaDTO = dados;
-      this.barbeariaService.criar(dto).subscribe({
-        next: () => {
-          this.salvando.set(false);
-          this.mostrarToast('Barbearia cadastrada com sucesso!', 'success');
-          this.router.navigate(['/tabs/admin/dashboard']);
-        },
-        error: (err) => {
-          this.salvando.set(false);
-          this.mostrarToast(err.error?.erro || 'Erro ao cadastrar', 'danger');
-        }
-      });
-    }
-  }
-
-  async toggleAtivo(event: CustomEvent): Promise<void> {
-    const ativo = event.detail.checked;
-
-    if (!ativo) {
-      const alert = await this.alertController.create({
-        header: 'Desativar Barbearia',
-        message: 'Sua barbearia não aparecerá nas buscas. Deseja continuar?',
-        buttons: [
-          {
-            text: 'Cancelar',
-            role: 'cancel',
-            handler: () => {
-              // Reverter toggle
-              event.target && ((event.target as HTMLIonToggleElement).checked = true);
-            }
+      const id = this.barbeariaId();
+      if (id) {
+        this.barbeariaService.atualizar(dados as AtualizarBarbeariaDTO).subscribe({
+          next: () => {
+            this.salvando.set(false);
+            this.mostrarToast('Barbearia atualizada com sucesso!', 'success');
           },
-          {
-            text: 'Desativar',
-            role: 'destructive',
-            handler: () => {
-              this.barbeariaService.desativar().subscribe({
-                next: () => this.mostrarToast('Barbearia desativada', 'warning'),
-                error: () => this.mostrarToast('Erro ao desativar', 'danger')
-              });
-            }
+          error: (err) => {
+            this.salvando.set(false);
+            this.mostrarToast('Erro ao atualizar barbearia.', 'danger');
+            console.error(err);
           }
-        ]
-      });
-      await alert.present();
+        });
+      }
     } else {
-      this.barbeariaService.ativar().subscribe({
-        next: () => this.mostrarToast('Barbearia ativada!', 'success'),
-        error: () => this.mostrarToast('Erro ao ativar', 'danger')
+      this.barbeariaService.criar(dados as CriarBarbeariaDTO).subscribe({
+        next: (novaBarbearia) => {
+          this.salvando.set(false);
+          this.possuiBarbearia.set(true);
+          this.barbeariaId.set(novaBarbearia.id);
+          this.mostrarToast('Barbearia criada com sucesso!', 'success');
+        },
+        error: (err) => {
+          this.salvando.set(false);
+          this.mostrarToast('Erro ao criar barbearia.', 'danger');
+          console.error(err);
+        }
       });
     }
   }
 
-  private async mostrarToast(message: string, color: string): Promise<void> {
+  async mostrarToast(mensagem: string, cor: 'success' | 'danger') {
     const toast = await this.toastController.create({
-      message,
+      message: mensagem,
       duration: 3000,
-      color,
+      color: cor,
       position: 'bottom'
     });
     await toast.present();

@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, inject, OnInit, Input } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import {
-  IonItem, IonInput, IonList, IonItemDivider, IonIcon, IonLabel, IonSpinner, IonButton
+  IonItem, IonInput, IonList, IonIcon, IonLabel, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { locationOutline, searchOutline, closeCircleOutline, mapOutline } from 'ionicons/icons';
@@ -16,7 +16,7 @@ import { Observable, of, BehaviorSubject } from 'rxjs';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    IonItem, IonInput, IonList, IonItemDivider, IonIcon, IonLabel, IonSpinner, IonButton
+    IonItem, IonInput, IonList, IonIcon, IonLabel, IonSpinner
   ],
   template: `
     <div class="autocomplete-container">

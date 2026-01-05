@@ -30,9 +30,9 @@ import {
     CommonModule,
     ReactiveFormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonList, IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonButton, IonSpinner, IonText, IonIcon, IonCard, IonCardHeader, IonCardTitle,
-    IonCardContent, IonToggle, IonAvatar, IonBadge, MapaComponent
+    IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
+    IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
+    IonCardContent, IonToggle, IonBadge, MapaComponent
   ],
   template: `
     <ion-header>
