@@ -2,13 +2,18 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideIonicAngular } from '@ionic/angular/standalone';
-import { provideZonelessChangeDetection, APP_INITIALIZER, inject } from '@angular/core';
+import { provideZonelessChangeDetection, APP_INITIALIZER, inject, LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/auth/auth.interceptor';
 import { AuthService } from './app/core/auth/auth.service';
 import { AppConfigService } from './app/core/config/app-config.service';
+
+// Registra locale pt-BR para formatação de datas e números
+registerLocaleData(localePt, 'pt-BR');
 
 /**
  * Inicializa configurações públicas da aplicação.
@@ -50,6 +55,9 @@ bootstrapApplication(AppComponent, {
         provideHttpClient(
             withInterceptors([authInterceptor])
         ),
+
+        // Locale pt-BR para formatação de datas e números
+        { provide: LOCALE_ID, useValue: 'pt-BR' },
 
         // Inicialização das configurações públicas (Google OAuth, etc)
         {

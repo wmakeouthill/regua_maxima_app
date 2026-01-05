@@ -133,6 +133,18 @@ export const routes: Routes = [
                     {
                         path: 'explorar',
                         loadComponent: () => import('./features/cliente/explorar/explorar-barbearias.page').then(m => m.ExplorarBarbeariasPage)
+                    },
+                    {
+                        path: 'agendamentos',
+                        loadComponent: () => import('./features/cliente/meus-agendamentos/meus-agendamentos.page').then(m => m.MeusAgendamentosPage)
+                    },
+                    {
+                        path: 'agendar/:barbeariaId',
+                        loadComponent: () => import('./features/cliente/novo-agendamento/novo-agendamento.page').then(m => m.NovoAgendamentoPage)
+                    },
+                    {
+                        path: 'agendamento/:id',
+                        loadComponent: () => import('./features/cliente/detalhe-agendamento/detalhe-agendamento.page').then(m => m.DetalheAgendamentoPage)
                     }
                 ]
             },
