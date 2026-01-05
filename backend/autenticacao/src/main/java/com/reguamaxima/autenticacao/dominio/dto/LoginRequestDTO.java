@@ -17,5 +17,11 @@ public record LoginRequestDTO(
          * Role desejada para esta sessão (opcional).
          * Se não informada e usuário tiver múltiplas roles, será solicitada seleção.
          */
-        String roleAtiva) {
+        String roleAtiva,
+
+        /**
+         * Se true e a role não existir, adiciona automaticamente ao usuário.
+         * Útil para telas de login segmentadas por tipo de usuário.
+         */
+        Boolean adicionarRoleSeNaoExistir) {
 }

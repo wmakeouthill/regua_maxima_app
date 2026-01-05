@@ -114,11 +114,12 @@ export class AuthService {
     /**
      * Realiza login do usuário.
      * @param roleAtiva Role desejada (opcional para usuários com múltiplas roles)
+     * @param adicionarRoleSeNaoExistir Se true, adiciona a role ao usuário caso não possua
      */
-    login(email: string, senha: string, roleAtiva?: TipoUsuario): Observable<AuthResponse> {
+    login(email: string, senha: string, roleAtiva?: TipoUsuario, adicionarRoleSeNaoExistir = false): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/login`,
-            { email, senha, roleAtiva }
+            { email, senha, roleAtiva, adicionarRoleSeNaoExistir }
         ).pipe(
             switchMap(response => {
                 if (response.requerSelecaoPerfil) {
@@ -236,11 +237,13 @@ export class AuthService {
 
     /**
      * Realiza login com Google OAuth.
+     * @param roleAtiva Role desejada (opcional)
+     * @param adicionarRoleSeNaoExistir Se true, adiciona a role ao usuário caso não possua
      */
-    loginGoogle(idToken: string, roleAtiva?: TipoUsuario): Observable<AuthResponse> {
+    loginGoogle(idToken: string, roleAtiva?: TipoUsuario, adicionarRoleSeNaoExistir = false): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/login/google`,
-            { idToken, roleAtiva }
+            { idToken, roleAtiva, adicionarRoleSeNaoExistir }
         ).pipe(
             switchMap(response => {
                 if (response.requerSelecaoPerfil) {

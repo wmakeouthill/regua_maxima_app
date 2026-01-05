@@ -28,11 +28,11 @@ import { GoogleSignInService } from '@core/auth/google-signin.service';
     styleUrl: './login.page.scss'
 })
 export class LoginPage implements OnInit, OnDestroy {
-    private authService = inject(AuthService);
-    protected googleSignIn = inject(GoogleSignInService);
-    private router = inject(Router);
-    private route = inject(ActivatedRoute);
-    private cdr = inject(ChangeDetectorRef);
+    private readonly authService = inject(AuthService);
+    protected readonly googleSignIn = inject(GoogleSignInService);
+    private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
+    private readonly cdr = inject(ChangeDetectorRef);
 
     @ViewChild('googleButton') googleButtonRef?: ElementRef<HTMLDivElement>;
     googleButtonRendered = signal(false);
@@ -55,14 +55,20 @@ export class LoginPage implements OnInit, OnDestroy {
         addIcons({ cutOutline, personOutline, storefrontOutline, briefcaseOutline, chevronForwardOutline });
     }
 
-    async ngOnInit(): Promise<void> {
+    ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
             const tipo = params['tipo'] as TipoUsuario;
             if (tipo && ['ADMIN', 'BARBEIRO', 'CLIENTE'].includes(tipo)) {
                 this.tipoUsuarioSelecionado.set(tipo);
+                this.initGoogleSignIn();
+            } else {
+                // Se não tiver tipo selecionado, redireciona para tela de escolha
+                this.router.navigate(['/welcome'], { replaceUrl: true });
             }
         });
+    }
 
+    private async initGoogleSignIn(): Promise<void> {
         try {
             await this.googleSignIn.initialize();
             if (this.googleSignIn.isConfigured) {
@@ -119,8 +125,8 @@ export class LoginPage implements OnInit, OnDestroy {
     }
 
     private setupGoogleCredentialListener(): void {
-        this.credentialSub = this.googleSignIn.credential$.subscribe(async (token: string) => {
-            await this.processarLoginGoogle(token);
+        this.credentialSub = this.googleSignIn.credential$.subscribe((token: string) => {
+            this.processarLoginGoogle(token);
         });
     }
 
@@ -159,7 +165,11 @@ export class LoginPage implements OnInit, OnDestroy {
         this.erro.set('');
         this.carregando.set(true);
 
-        this.authService.loginGoogle(idToken).subscribe({
+        // Passa a role desejada (tipoUsuarioSelecionado) e flag para adicionar automaticamente se não existir
+        const roleDesejada = this.tipoUsuarioSelecionado() || undefined;
+        const adicionarRole = roleDesejada !== undefined;
+
+        this.authService.loginGoogle(idToken, roleDesejada, adicionarRole).subscribe({
             next: (response) => {
                 if (response.requerSelecaoPerfil) {
                     this.mostrarSelecaoPerfil.set(true);
@@ -185,7 +195,11 @@ export class LoginPage implements OnInit, OnDestroy {
         this.erro.set('');
         this.carregando.set(true);
 
-        this.authService.login(this.email, this.senha).subscribe({
+        // Passa a role desejada (tipoUsuarioSelecionado) e flag para adicionar automaticamente se não existir
+        const roleDesejada = this.tipoUsuarioSelecionado() || undefined;
+        const adicionarRole = roleDesejada !== undefined; // Adiciona role automaticamente se usuário selecionou um tipo
+
+        this.authService.login(this.email, this.senha, roleDesejada, adicionarRole).subscribe({
             next: (response) => {
                 if (response.requerSelecaoPerfil) {
                     // Usuário tem múltiplas roles, mostra seleção

@@ -21,7 +21,7 @@ import java.util.List;
  * Controller REST para barbeiros.
  */
 @RestController
-@RequestMapping("/api/barbeiros")
+@RequestMapping("/api/v1/barbeiros")
 @RequiredArgsConstructor
 @Tag(name = "Barbeiros", description = "Gestão de barbeiros")
 public class BarbeiroController {

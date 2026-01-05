@@ -26,3 +26,10 @@ databaseChangeLog:
   - include:
       file: db/migrations/v1.0.0/005_criar_tabela_barbeiros.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/migrations/v1.0.0/006_usuario_multiplas_roles.yaml
+      relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/007_criar_tabela_atendimentos.yaml
+      relativeToChangelogFile: false

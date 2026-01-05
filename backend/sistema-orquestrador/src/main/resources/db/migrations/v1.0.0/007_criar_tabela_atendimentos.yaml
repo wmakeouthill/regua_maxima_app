@@ -1,0 +1,230 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Criar tabela atendimentos
+  # Versão: 1.0.0
+  # Data: 2026-01-04
+  # Autor: Sistema
+  # Descrição: Tabela de atendimentos/fila do barbeiro
+  # ========================================================
+
+  - changeSet:
+      id: 007-criar-tabela-atendimentos
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: atendimentos
+        - tableExists:
+            tableName: barbeiros
+        - tableExists:
+            tableName: servicos
+        - tableExists:
+            tableName: usuarios
+      comment: "Cria tabela de atendimentos para gerenciar fila de clientes"
+      changes:
+        - createTable:
+            tableName: atendimentos
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # ========== Vínculo com Barbeiro ==========
+              - column:
+                  name: barbeiro_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Vínculo com Cliente ==========
+              - column:
+                  name: cliente_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Vínculo com Serviço ==========
+              - column:
+                  name: servico_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # ========== Vínculo com Barbearia ==========
+              - column:
+                  name: barbearia_id
+                  type: BIGINT
+                  remarks: "Barbearia onde o atendimento ocorre (pode ser null se barbeiro autônomo)"
+
+              # ========== Status do Atendimento ==========
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: "AGUARDANDO"
+                  constraints:
+                    nullable: false
+
+              # ========== Datas e Horários ==========
+              - column:
+                  name: data_atendimento
+                  type: DATE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: hora_chegada
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: hora_inicio_atendimento
+                  type: TIMESTAMP
+                  remarks: "Quando o atendimento efetivamente começou"
+
+              - column:
+                  name: hora_fim_atendimento
+                  type: TIMESTAMP
+                  remarks: "Quando o atendimento foi concluído"
+
+              # ========== Posição na Fila ==========
+              - column:
+                  name: posicao_fila
+                  type: INT
+                  remarks: "Posição na fila de espera (calculada)"
+
+              # ========== Observações ==========
+              - column:
+                  name: observacoes
+                  type: VARCHAR(500)
+                  remarks: "Observações do barbeiro sobre o atendimento"
+
+              - column:
+                  name: motivo_cancelamento
+                  type: VARCHAR(300)
+                  remarks: "Motivo caso atendimento seja cancelado"
+
+              # ========== Auditoria ==========
+              - column:
+                  name: data_criacao
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: data_atualizacao
+                  type: TIMESTAMP
+
+  # ========== Foreign Keys - ChangeSet Separado ==========
+  - changeSet:
+      id: 007-fks-atendimentos
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: atendimentos
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_atendimento_barbeiro
+      comment: "Adiciona foreign keys para tabela atendimentos"
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: atendimentos
+            baseColumnNames: barbeiro_id
+            constraintName: fk_atendimento_barbeiro
+            referencedTableName: barbeiros
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: atendimentos
+            baseColumnNames: cliente_id
+            constraintName: fk_atendimento_cliente
+            referencedTableName: usuarios
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: atendimentos
+            baseColumnNames: servico_id
+            constraintName: fk_atendimento_servico
+            referencedTableName: servicos
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: atendimentos
+            baseColumnNames: barbearia_id
+            constraintName: fk_atendimento_barbearia
+            referencedTableName: barbearias
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  # ========== Índices para Performance ==========
+  - changeSet:
+      id: 007-indices-atendimentos
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: atendimentos
+        - not:
+            indexExists:
+              indexName: idx_atendimento_barbeiro_data
+      comment: "Cria índices para otimizar consultas de atendimentos"
+      changes:
+        # Índice para buscar fila do barbeiro por data
+        - createIndex:
+            tableName: atendimentos
+            indexName: idx_atendimento_barbeiro_data
+            columns:
+              - column:
+                  name: barbeiro_id
+              - column:
+                  name: data_atendimento
+              - column:
+                  name: status
+
+        # Índice para buscar atendimentos do cliente
+        - createIndex:
+            tableName: atendimentos
+            indexName: idx_atendimento_cliente
+            columns:
+              - column:
+                  name: cliente_id
+              - column:
+                  name: status
+
+        # Índice para buscar atendimentos por barbearia
+        - createIndex:
+            tableName: atendimentos
+            indexName: idx_atendimento_barbearia_data
+            columns:
+              - column:
+                  name: barbearia_id
+              - column:
+                  name: data_atendimento
+
+  # ========== Constraint CHECK para Status ==========
+  - changeSet:
+      id: 007-check-status-atendimento
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: atendimentos
+      comment: "Adiciona constraint de valores válidos para status"
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE atendimentos 
+              ADD CONSTRAINT chk_atendimento_status 
+              CHECK (status IN ('AGUARDANDO', 'EM_ATENDIMENTO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'))
+            rollbackSql: >
+              ALTER TABLE atendimentos DROP CONSTRAINT IF EXISTS chk_atendimento_status

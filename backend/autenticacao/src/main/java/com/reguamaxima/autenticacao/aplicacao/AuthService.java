@@ -66,7 +66,13 @@ public class AuthService {
         if (roleDesejada != null) {
             // Validar se usuário possui a role desejada
             if (!usuario.possuiRole(roleDesejada)) {
-                throw new BadCredentialsException("Você não possui acesso como " + roleDesejada.getDescricao());
+                // Se flag adicionarRoleSeNaoExistir estiver true, adiciona a role
+                if (Boolean.TRUE.equals(request.adicionarRoleSeNaoExistir())) {
+                    usuario.adicionarRole(roleDesejada);
+                    log.info("Role {} adicionada automaticamente ao usuário: {}", roleDesejada, request.email());
+                } else {
+                    throw new BadCredentialsException("Você não possui acesso como " + roleDesejada.getDescricao());
+                }
             }
             usuario.setRoleAtiva(roleDesejada);
         } else if (usuario.possuiMultiplasRoles()) {
@@ -225,9 +231,18 @@ public class AuthService {
         // Verificar se precisa selecionar role
         Role roleDesejada = parseRole(request.roleAtiva());
 
-        if (roleDesejada != null && usuario.possuiRole(roleDesejada)) {
+        if (roleDesejada != null) {
+            if (!usuario.possuiRole(roleDesejada)) {
+                // Se flag adicionarRoleSeNaoExistir estiver true, adiciona a role
+                if (Boolean.TRUE.equals(request.adicionarRoleSeNaoExistir())) {
+                    usuario.adicionarRole(roleDesejada);
+                    log.info("Role {} adicionada automaticamente ao usuário Google: {}", roleDesejada, email);
+                } else {
+                    throw new BadCredentialsException("Você não possui acesso como " + roleDesejada.getDescricao());
+                }
+            }
             usuario.setRoleAtiva(roleDesejada);
-        } else if (usuario.possuiMultiplasRoles() && roleDesejada == null) {
+        } else if (usuario.possuiMultiplasRoles()) {
             return criarRespostaSelecionarPerfil(usuario);
         }
 

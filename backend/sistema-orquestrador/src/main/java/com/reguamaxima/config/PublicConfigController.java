@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Endpoint público, não requer autenticação.
  */
 @RestController
-@RequestMapping("/api/config")
+@RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
 @Tag(name = "Configuração", description = "Configurações públicas da aplicação")
 public class PublicConfigController {

@@ -51,7 +51,7 @@ public class ServicoBarbearia {
         }
 
         // Verifica se o admin tem role correto
-        if (admin.getRole() != Usuario.Role.ADMIN) {
+        if (!admin.possuiRole(Usuario.Role.ADMIN)) {
             throw new IllegalArgumentException("Apenas administradores podem criar barbearias");
         }
 
