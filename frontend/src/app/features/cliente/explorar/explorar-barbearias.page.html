@@ -69,13 +69,9 @@
     </div>
     } @else if (tipoVisualizacao === 'mapa') {
     <!-- Placeholder do Mapa -->
-    <div class="map-placeholder">
-        <ion-icon name="map-outline"></ion-icon>
-        <h3>Mapa de Barbearias</h3>
-        <p>Integração com Google Maps em breve</p>
-        <ion-button fill="outline" (click)="tipoVisualizacao = 'lista'">
-            Ver em Lista
-        </ion-button>
+    <div class="map-container" style="height: calc(100vh - 200px); width: 100%;">
+        <app-mapa [center]="mapCenter()" [markers]="mapMarkers()" [zoom]="14" height="100%"
+            (markerClick)="onMapMarkerClick($event)"></app-mapa>
     </div>
     } @else if (barbeariasFiltradas().length === 0) {
     <ion-card class="empty-card">

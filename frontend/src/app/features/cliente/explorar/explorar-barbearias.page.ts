@@ -19,6 +19,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { BarbeariaService } from '@core/services/barbearia.service';
 import { FavoritoService } from '@core/services/favorito.service';
 import { BarbeariaResumo } from '@core/models/barbearia.model';
+import { MapaComponent, MapMarkerOptions } from '../../../shared/components/mapa/mapa.component';
 
 /**
  * Card de barbearia para exibição na lista.
@@ -47,7 +48,8 @@ type TipoVisualizacao = 'lista' | 'mapa';
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
         IonCardContent, IonIcon, IonButton, IonBadge, IonRefresher,
         IonRefresherContent, IonButtons, IonChip, IonSearchbar,
-        IonSegment, IonSegmentButton, IonLabel, IonSkeletonText
+        IonSegment, IonSegmentButton, IonLabel, IonSkeletonText,
+        MapaComponent
     ],
     templateUrl: './explorar-barbearias.page.html',
     styleUrl: './explorar-barbearias.page.scss',
@@ -82,6 +84,34 @@ export class ExplorarBarbeariasPage implements OnInit {
             (b.cidade && b.cidade.toLowerCase().includes(termo))
         );
     });
+
+    readonly mapMarkers = computed<MapMarkerOptions[]>(() => {
+        return this.barbeariasFiltradas()
+            .filter(b => b.latitude && b.longitude)
+            .map(b => ({
+                position: { lat: b.latitude!, lng: b.longitude! },
+                title: b.nome,
+                options: {
+                    icon: b.ativo ? undefined : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png' // Example differentiator
+                    // Could use custom icons based on active status or ratings
+                },
+                // Store metadata to identify which barbershop to open on click
+                // Actually MapMarkerOptions doesn't explicitly support custom data payload in my interface
+                // But we can find by position or title, or extend interface if needed.
+                // For simplicity, let's use title matching or rely on array index if stable (risky).
+                // Better: The click event returns the marker options. I can attach a hidden property or use title.
+                // Let's rely on title for now (or improve MapMarkerOptions later).
+                // Actually, let's just use the fact I have the filtered list.
+            }));
+    });
+
+    // Need to handle marker click to open details.
+    // Since MapMarkerOptions is simple, I'll need to lookup the barbershop.
+
+    readonly mapCenter = computed<google.maps.LatLngLiteral>(() => ({
+        lat: this.latitudeAtual,
+        lng: this.longitudeAtual
+    }));
 
     constructor() {
         addIcons({
@@ -216,9 +246,18 @@ export class ExplorarBarbeariasPage implements OnInit {
      * Altera entre visualização lista/mapa.
      */
     alterarVisualizacao(): void {
-        // Mapa será implementado posteriormente
-        if (this.tipoVisualizacao === 'mapa') {
-            console.log('Visualização de mapa ainda não implementada');
+        // Nada a fazer, ngModel cuida
+    }
+
+    onMapMarkerClick(marker: MapMarkerOptions) {
+        // Find barbershop by matching position (and title just to be safe)
+        const found = this.barbeariasFiltradas().find(b =>
+            b.latitude === marker.position.lat &&
+            b.longitude === marker.position.lng
+        );
+
+        if (found) {
+            this.abrirBarbearia(found);
         }
     }
 

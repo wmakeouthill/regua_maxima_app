@@ -17,21 +17,22 @@ import {
 
 import { BarbeiroService } from '../../../core/services/barbeiro.service';
 import { ImageUploadService } from '../../../core/services/image-upload.service';
+import { MapaComponent, MapMarkerOptions } from '../../../shared/components/mapa/mapa.component';
 import {
   Barbeiro, CriarBarbeiroDTO, AtualizarBarbeiroDTO,
   ESPECIALIDADES_BARBEIRO, STATUS_VINCULO_LABEL, STATUS_VINCULO_COR
 } from '../../../core/models/barbeiro.model';
 
 @Component({
-  selector: 'app-meu-perfil-barbeiro',
+  selector: 'app-meu-perfil',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
-    IonCardContent, IonToggle, IonBadge
+    IonList, IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
+    IonButton, IonSpinner, IonText, IonIcon, IonCard, IonCardHeader, IonCardTitle,
+    IonCardContent, IonToggle, IonAvatar, IonBadge, MapaComponent
   ],
   template: `
     <ion-header>
@@ -242,6 +243,19 @@ import {
                 </ion-item>
 
                 @if (form.get('visivelMapa')?.value) {
+                  <div class="map-preview ion-margin-top ion-margin-bottom">
+                      <app-mapa
+                        [center]="mapCenter"
+                        [markers]="mapMarkers"
+                        [zoom]="15"
+                        height="200px"
+                        (mapClick)="onMapClick($event)"
+                      ></app-mapa>
+                      <p class="ion-text-center ion-no-margin">
+                        <small class="text-medium">Toque no mapa para definir sua posição exata</small>
+                      </p>
+                  </div>
+
                   <ion-item>
                     <ion-input
                       formControlName="latitude"
@@ -249,6 +263,7 @@ import {
                       label="Latitude"
                       labelPlacement="floating"
                       step="0.000001"
+                      readonly
                     ></ion-input>
                   </ion-item>
 
@@ -259,6 +274,7 @@ import {
                       label="Longitude"
                       labelPlacement="floating"
                       step="0.000001"
+                      readonly
                     ></ion-input>
                   </ion-item>
 
@@ -378,6 +394,12 @@ import {
         color: var(--ion-color-medium);
       }
     }
+
+    .map-preview {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--ion-color-light-shade);
+    }
   `]
 })
 export class MeuPerfilBarbeiroPage implements OnInit {
@@ -394,6 +416,10 @@ export class MeuPerfilBarbeiroPage implements OnInit {
   readonly modoEdicao = signal(false);
   readonly perfil = signal<Barbeiro | null>(null);
   readonly uploadandoFoto = signal(false);
+
+  // Map state
+  mapCenter: google.maps.LatLngLiteral = { lat: -23.550520, lng: -46.633308 };
+  mapMarkers: MapMarkerOptions[] = [];
 
   form: FormGroup = this.fb.group({
     nomeProfissional: [''],
@@ -428,7 +454,7 @@ export class MeuPerfilBarbeiroPage implements OnInit {
       next: (perfil) => {
         this.perfil.set(perfil);
         this.modoEdicao.set(true);
-        this.preencherForm(perfil);
+        this.preencherFormulario(perfil);
         this.carregando.set(false);
       },
       error: (error) => {
@@ -441,15 +467,11 @@ export class MeuPerfilBarbeiroPage implements OnInit {
     });
   }
 
-  private preencherForm(perfil: Barbeiro): void {
-    const especialidadesArray = perfil.especialidades
-      ? perfil.especialidades.split(',').map(e => e.trim())
-      : [];
-
+  private preencherFormulario(perfil: Barbeiro): void {
     this.form.patchValue({
       nomeProfissional: perfil.nomeProfissional,
       bio: perfil.bio,
-      especialidadesSelecionadas: especialidadesArray,
+      especialidadesSelecionadas: perfil.especialidades ? perfil.especialidades.split(',').map(e => e.trim()) : [],
       anosExperiencia: perfil.anosExperiencia,
       fotoUrl: perfil.fotoUrl,
       telefone: perfil.telefone,
@@ -459,6 +481,27 @@ export class MeuPerfilBarbeiroPage implements OnInit {
       latitude: perfil.latitude,
       longitude: perfil.longitude
     });
+
+    if (perfil.latitude && perfil.longitude) {
+      this.atualizarMapa({ lat: perfil.latitude, lng: perfil.longitude });
+    }
+  }
+
+  onMapClick(coords: google.maps.LatLngLiteral) {
+    this.form.patchValue({
+      latitude: coords.lat,
+      longitude: coords.lng
+    });
+    this.atualizarMapa(coords);
+  }
+
+  private atualizarMapa(coords: google.maps.LatLngLiteral) {
+    this.mapCenter = coords;
+    this.mapMarkers = [{
+      position: coords,
+      title: 'Sua Localização',
+      options: { draggable: true }
+    }];
   }
 
   async salvar(): Promise<void> {
@@ -528,6 +571,11 @@ export class MeuPerfilBarbeiroPage implements OnInit {
         this.form.patchValue({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
+        });
+
+        this.atualizarMapa({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
         });
       },
       async (error) => {
