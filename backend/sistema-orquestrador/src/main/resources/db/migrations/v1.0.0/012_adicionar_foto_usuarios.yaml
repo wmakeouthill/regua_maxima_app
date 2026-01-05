@@ -1,0 +1,29 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Adicionar campo foto_base64 na tabela usuarios
+  # Versão: 1.0.0
+  # Data: 2026-01-05
+  # Autor: Sistema
+  # Descrição: Campo para armazenar foto de perfil em base64
+  # ========================================================
+
+  - changeSet:
+      id: 012-adicionar-foto-base64-usuarios
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: usuarios
+        - not:
+            columnExists:
+              tableName: usuarios
+              columnName: foto_base64
+      comment: "Adiciona campo foto_base64 para foto de perfil"
+      changes:
+        - addColumn:
+            tableName: usuarios
+            columns:
+              - column:
+                  name: foto_base64
+                  type: TEXT
+                  remarks: "Foto de perfil em base64 (redimensionada para 200x200)"

@@ -16,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import { AuthService } from '@core/auth/auth.service';
 import { BarbeariaService } from '../../../core/services/barbearia.service';
+import { AtendimentoService } from '../../../core/services/atendimento.service';
 
 /**
  * Interface para módulo do dashboard
@@ -52,11 +53,15 @@ export class DashboardPage implements OnInit {
     private readonly router = inject(Router);
     private readonly authService = inject(AuthService);
     private readonly barbeariaService = inject(BarbeariaService);
+    private readonly atendimentoService = inject(AtendimentoService);
 
     // Estado
     readonly carregando = this.barbeariaService.carregando;
     readonly possuiBarbearia = this.barbeariaService.possuiBarbearia;
     readonly barbearia = this.barbeariaService.minhaBarbearia;
+
+    // Contagem real da fila de atendimento
+    readonly pessoasNaFila = this.atendimentoService.totalAguardando;
 
     // Stats mockados (TODO: integrar com serviços reais)
     readonly stats = signal({
@@ -69,6 +74,7 @@ export class DashboardPage implements OnInit {
     // Módulos disponíveis
     readonly modulos = computed<ModuloDashboard[]>(() => {
         const temBarbearia = this.possuiBarbearia();
+        const filaCount = this.pessoasNaFila();
         return [
             {
                 id: 'fila',
@@ -77,7 +83,7 @@ export class DashboardPage implements OnInit {
                 icone: 'list-outline',
                 rota: '/tabs/admin/fila',
                 cor: 'primary',
-                badge: 3, // TODO: integrar com serviço real
+                badge: filaCount > 0 ? filaCount : undefined, // Só mostra badge se tiver gente na fila
                 disponivel: temBarbearia
             },
             {
@@ -114,7 +120,7 @@ export class DashboardPage implements OnInit {
                 icone: 'people-outline',
                 rota: '/tabs/admin/barbeiros',
                 cor: 'warning',
-                badge: 1, // TODO: solicitações pendentes
+                // TODO: badge para solicitações pendentes quando implementado
                 disponivel: temBarbearia
             },
             {
@@ -167,6 +173,16 @@ export class DashboardPage implements OnInit {
                 // 404 é esperado se não tiver barbearia
                 if (err.status !== 404) {
                     console.error('Erro ao carregar barbearia', err);
+                }
+            }
+        });
+
+        // Carregar contagem real da fila
+        this.atendimentoService.buscarMinhaFila().subscribe({
+            error: (err) => {
+                // Erro esperado se não tiver perfil de barbeiro
+                if (err.status !== 404 && err.status !== 403) {
+                    console.error('Erro ao carregar fila', err);
                 }
             }
         });

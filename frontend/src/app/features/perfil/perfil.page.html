@@ -9,8 +9,15 @@
     <div class="profile-header">
         <div class="profile-background"></div>
         <div class="profile-info">
-            <div class="profile-avatar">
+            <div class="profile-avatar" (click)="selecionarFoto()">
+                @if (authService.currentUser()?.fotoBase64) {
+                <img [src]="authService.currentUser()?.fotoBase64" alt="Foto de perfil" />
+                } @else {
                 <ion-icon name="person-outline"></ion-icon>
+                }
+                <div class="avatar-overlay">
+                    <ion-icon name="camera-outline"></ion-icon>
+                </div>
             </div>
             <h2>{{ authService.currentUser()?.nome || 'Usuário' }}</h2>
             <p class="profile-email">{{ authService.currentUser()?.email }}</p>

@@ -1,0 +1,25 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Alterar foto_url para TEXT na tabela barbeiros
+  # Versão: 1.0.0
+  # Data: 2026-01-05
+  # Autor: Sistema
+  # Descrição: Permite armazenar foto em base64 (maior que 500 chars)
+  # ========================================================
+
+  - changeSet:
+      id: 013-alterar-foto-url-barbeiros-para-text
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: barbeiros
+        - columnExists:
+            tableName: barbeiros
+            columnName: foto_url
+      comment: "Altera foto_url de VARCHAR(500) para TEXT para suportar base64"
+      changes:
+        - modifyDataType:
+            tableName: barbeiros
+            columnName: foto_url
+            newDataType: TEXT

@@ -3,36 +3,37 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
-    IonCardContent, IonToggle, IonBadge, ToastController, AlertController
+  IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+  IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
+  IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
+  IonCardContent, IonToggle, IonBadge, ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-    personOutline, cutOutline, locationOutline, callOutline, logoWhatsapp,
-    logoInstagram, saveOutline, imageOutline, starOutline, briefcaseOutline,
-    mapOutline
+  personOutline, cutOutline, locationOutline, callOutline, logoWhatsapp,
+  logoInstagram, saveOutline, imageOutline, starOutline, briefcaseOutline,
+  mapOutline, cloudUploadOutline
 } from 'ionicons/icons';
 
 import { BarbeiroService } from '../../../core/services/barbeiro.service';
+import { ImageUploadService } from '../../../core/services/image-upload.service';
 import {
-    Barbeiro, CriarBarbeiroDTO, AtualizarBarbeiroDTO,
-    ESPECIALIDADES_BARBEIRO, STATUS_VINCULO_LABEL, STATUS_VINCULO_COR
+  Barbeiro, CriarBarbeiroDTO, AtualizarBarbeiroDTO,
+  ESPECIALIDADES_BARBEIRO, STATUS_VINCULO_LABEL, STATUS_VINCULO_COR
 } from '../../../core/models/barbeiro.model';
 
 @Component({
-    selector: 'app-meu-perfil-barbeiro',
-    standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-        IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
-        IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
-        IonCardContent, IonToggle, IonBadge
-    ],
-    template: `
+  selector: 'app-meu-perfil-barbeiro',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+    IonList, IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
+    IonButton, IonSpinner, IonIcon, IonCard, IonCardHeader, IonCardTitle,
+    IonCardContent, IonToggle, IonBadge
+  ],
+  template: `
     <ion-header>
       <ion-toolbar color="primary">
         <ion-buttons slot="start">
@@ -138,22 +139,44 @@ import {
               </ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
+              <div class="foto-upload-section">
+                @if (form.get('fotoUrl')?.value) {
+                  <div class="foto-preview">
+                    <img [src]="form.get('fotoUrl')?.value" alt="Preview" />
+                  </div>
+                } @else {
+                  <div class="foto-placeholder">
+                    <ion-icon name="person-outline"></ion-icon>
+                  </div>
+                }
+
+                <ion-button
+                  expand="block"
+                  fill="outline"
+                  (click)="selecionarFoto()"
+                  [disabled]="uploadandoFoto()"
+                  class="ion-margin-top"
+                >
+                  @if (uploadandoFoto()) {
+                    <ion-spinner name="crescent" slot="start"></ion-spinner>
+                    Enviando...
+                  } @else {
+                    <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+                    {{ form.get('fotoUrl')?.value ? 'Trocar Foto' : 'Enviar Foto' }}
+                  }
+                </ion-button>
+              </div>
+
+              <ion-list class="ion-margin-top">
                 <ion-item>
                   <ion-input
                     formControlName="fotoUrl"
-                    label="URL da Foto"
+                    label="Ou cole uma URL"
                     labelPlacement="floating"
                     placeholder="https://..."
                   ></ion-input>
                 </ion-item>
               </ion-list>
-
-              @if (form.get('fotoUrl')?.value) {
-                <div class="foto-preview">
-                  <img [src]="form.get('fotoUrl')?.value" alt="Preview" />
-                </div>
-              }
             </ion-card-content>
           </ion-card>
 
@@ -272,7 +295,7 @@ import {
       }
     </ion-content>
   `,
-    styles: [`
+  styles: [`
     .loading-container {
       display: flex;
       flex-direction: column;
@@ -334,174 +357,233 @@ import {
         border: 3px solid var(--ion-color-primary);
       }
     }
+
+    .foto-upload-section {
+      text-align: center;
+    }
+
+    .foto-placeholder {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: var(--ion-color-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      border: 3px dashed var(--ion-color-medium);
+
+      ion-icon {
+        font-size: 48px;
+        color: var(--ion-color-medium);
+      }
+    }
   `]
 })
 export class MeuPerfilBarbeiroPage implements OnInit {
-    private readonly fb = inject(FormBuilder);
-    private readonly router = inject(Router);
-    private readonly barbeiroService = inject(BarbeiroService);
-    private readonly toastController = inject(ToastController);
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly barbeiroService = inject(BarbeiroService);
+  private readonly toastController = inject(ToastController);
+  private readonly imageUploadService = inject(ImageUploadService);
 
-    readonly especialidades = ESPECIALIDADES_BARBEIRO;
+  readonly especialidades = ESPECIALIDADES_BARBEIRO;
 
-    readonly carregando = signal(false);
-    readonly salvando = signal(false);
-    readonly modoEdicao = signal(false);
-    readonly perfil = signal<Barbeiro | null>(null);
+  readonly carregando = signal(false);
+  readonly salvando = signal(false);
+  readonly modoEdicao = signal(false);
+  readonly perfil = signal<Barbeiro | null>(null);
+  readonly uploadandoFoto = signal(false);
 
-    form: FormGroup = this.fb.group({
-        nomeProfissional: [''],
-        bio: [''],
-        especialidadesSelecionadas: [[]],
-        anosExperiencia: [null],
-        fotoUrl: [''],
-        telefone: [''],
-        whatsapp: [''],
-        instagram: [''],
-        visivelMapa: [true],
-        latitude: [null],
-        longitude: [null]
+  form: FormGroup = this.fb.group({
+    nomeProfissional: [''],
+    bio: [''],
+    especialidadesSelecionadas: [[]],
+    anosExperiencia: [null],
+    fotoUrl: [''],
+    telefone: [''],
+    whatsapp: [''],
+    instagram: [''],
+    visivelMapa: [true],
+    latitude: [null],
+    longitude: [null]
+  });
+
+  constructor() {
+    addIcons({
+      personOutline, cutOutline, locationOutline, callOutline, logoWhatsapp,
+      logoInstagram, saveOutline, imageOutline, starOutline, briefcaseOutline,
+      mapOutline, cloudUploadOutline
     });
+  }
 
-    constructor() {
-        addIcons({
-            personOutline, cutOutline, locationOutline, callOutline, logoWhatsapp,
-            logoInstagram, saveOutline, imageOutline, starOutline, briefcaseOutline,
-            mapOutline
-        });
-    }
+  ngOnInit(): void {
+    this.carregarPerfil();
+  }
 
-    ngOnInit(): void {
-        this.carregarPerfil();
-    }
+  private async carregarPerfil(): Promise<void> {
+    this.carregando.set(true);
 
-    private async carregarPerfil(): Promise<void> {
-        this.carregando.set(true);
-
-        this.barbeiroService.carregarMeuPerfil().subscribe({
-            next: (perfil) => {
-                this.perfil.set(perfil);
-                this.modoEdicao.set(true);
-                this.preencherForm(perfil);
-                this.carregando.set(false);
-            },
-            error: (error) => {
-                if (error.status === 404) {
-                    // Não possui perfil ainda
-                    this.modoEdicao.set(false);
-                }
-                this.carregando.set(false);
-            }
-        });
-    }
-
-    private preencherForm(perfil: Barbeiro): void {
-        const especialidadesArray = perfil.especialidades
-            ? perfil.especialidades.split(',').map(e => e.trim())
-            : [];
-
-        this.form.patchValue({
-            nomeProfissional: perfil.nomeProfissional,
-            bio: perfil.bio,
-            especialidadesSelecionadas: especialidadesArray,
-            anosExperiencia: perfil.anosExperiencia,
-            fotoUrl: perfil.fotoUrl,
-            telefone: perfil.telefone,
-            whatsapp: perfil.whatsapp,
-            instagram: perfil.instagram,
-            visivelMapa: perfil.visivelMapa,
-            latitude: perfil.latitude,
-            longitude: perfil.longitude
-        });
-    }
-
-    async salvar(): Promise<void> {
-        if (!this.form.valid) return;
-
-        this.salvando.set(true);
-        const valores = this.form.value;
-
-        const dto = {
-            nomeProfissional: valores.nomeProfissional,
-            bio: valores.bio,
-            especialidades: valores.especialidadesSelecionadas?.join(', '),
-            anosExperiencia: valores.anosExperiencia,
-            fotoUrl: valores.fotoUrl,
-            telefone: valores.telefone,
-            whatsapp: valores.whatsapp,
-            instagram: valores.instagram,
-            visivelMapa: valores.visivelMapa,
-            latitude: valores.latitude,
-            longitude: valores.longitude
-        };
-
-        const operacao = this.modoEdicao()
-            ? this.barbeiroService.atualizarPerfil(dto)
-            : this.barbeiroService.criarPerfil(dto);
-
-        operacao.subscribe({
-            next: async (perfil) => {
-                this.perfil.set(perfil);
-                this.modoEdicao.set(true);
-                this.salvando.set(false);
-
-                const toast = await this.toastController.create({
-                    message: this.modoEdicao() ? 'Perfil atualizado!' : 'Perfil criado com sucesso!',
-                    duration: 2000,
-                    color: 'success',
-                    position: 'bottom'
-                });
-                await toast.present();
-            },
-            error: async (error) => {
-                this.salvando.set(false);
-                const toast = await this.toastController.create({
-                    message: error.error?.message || 'Erro ao salvar perfil',
-                    duration: 3000,
-                    color: 'danger',
-                    position: 'bottom'
-                });
-                await toast.present();
-            }
-        });
-    }
-
-    async obterLocalizacao(): Promise<void> {
-        if (!navigator.geolocation) {
-            const toast = await this.toastController.create({
-                message: 'Geolocalização não suportada',
-                duration: 2000,
-                color: 'warning'
-            });
-            await toast.present();
-            return;
+    this.barbeiroService.carregarMeuPerfil().subscribe({
+      next: (perfil) => {
+        this.perfil.set(perfil);
+        this.modoEdicao.set(true);
+        this.preencherForm(perfil);
+        this.carregando.set(false);
+      },
+      error: (error) => {
+        if (error.status === 404) {
+          // Não possui perfil ainda
+          this.modoEdicao.set(false);
         }
+        this.carregando.set(false);
+      }
+    });
+  }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                this.form.patchValue({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                });
-            },
-            async (error) => {
-                const toast = await this.toastController.create({
-                    message: 'Erro ao obter localização',
-                    duration: 2000,
-                    color: 'danger'
-                });
-                await toast.present();
-            }
-        );
+  private preencherForm(perfil: Barbeiro): void {
+    const especialidadesArray = perfil.especialidades
+      ? perfil.especialidades.split(',').map(e => e.trim())
+      : [];
+
+    this.form.patchValue({
+      nomeProfissional: perfil.nomeProfissional,
+      bio: perfil.bio,
+      especialidadesSelecionadas: especialidadesArray,
+      anosExperiencia: perfil.anosExperiencia,
+      fotoUrl: perfil.fotoUrl,
+      telefone: perfil.telefone,
+      whatsapp: perfil.whatsapp,
+      instagram: perfil.instagram,
+      visivelMapa: perfil.visivelMapa,
+      latitude: perfil.latitude,
+      longitude: perfil.longitude
+    });
+  }
+
+  async salvar(): Promise<void> {
+    if (!this.form.valid) return;
+
+    this.salvando.set(true);
+    const valores = this.form.value;
+
+    const dto = {
+      nomeProfissional: valores.nomeProfissional,
+      bio: valores.bio,
+      especialidades: valores.especialidadesSelecionadas?.join(', '),
+      anosExperiencia: valores.anosExperiencia,
+      fotoUrl: valores.fotoUrl,
+      telefone: valores.telefone,
+      whatsapp: valores.whatsapp,
+      instagram: valores.instagram,
+      visivelMapa: valores.visivelMapa,
+      latitude: valores.latitude,
+      longitude: valores.longitude
+    };
+
+    const operacao = this.modoEdicao()
+      ? this.barbeiroService.atualizarPerfil(dto)
+      : this.barbeiroService.criarPerfil(dto);
+
+    operacao.subscribe({
+      next: async (perfil) => {
+        this.perfil.set(perfil);
+        this.modoEdicao.set(true);
+        this.salvando.set(false);
+
+        const toast = await this.toastController.create({
+          message: this.modoEdicao() ? 'Perfil atualizado!' : 'Perfil criado com sucesso!',
+          duration: 2000,
+          color: 'success',
+          position: 'bottom'
+        });
+        await toast.present();
+      },
+      error: async (error) => {
+        this.salvando.set(false);
+        const toast = await this.toastController.create({
+          message: error.error?.message || 'Erro ao salvar perfil',
+          duration: 3000,
+          color: 'danger',
+          position: 'bottom'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  async obterLocalizacao(): Promise<void> {
+    if (!navigator.geolocation) {
+      const toast = await this.toastController.create({
+        message: 'Geolocalização não suportada',
+        duration: 2000,
+        color: 'warning'
+      });
+      await toast.present();
+      return;
     }
 
-    getCorStatus(): string {
-        const status = this.perfil()?.statusVinculo;
-        return status ? STATUS_VINCULO_COR[status] : 'medium';
-    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.form.patchValue({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      async (error) => {
+        const toast = await this.toastController.create({
+          message: 'Erro ao obter localização',
+          duration: 2000,
+          color: 'danger'
+        });
+        await toast.present();
+      }
+    );
+  }
 
-    getLabelStatus(): string {
-        const status = this.perfil()?.statusVinculo;
-        return status ? STATUS_VINCULO_LABEL[status] : 'Autônomo';
+  getCorStatus(): string {
+    const status = this.perfil()?.statusVinculo;
+    return status ? STATUS_VINCULO_COR[status] : 'medium';
+  }
+
+  getLabelStatus(): string {
+    const status = this.perfil()?.statusVinculo;
+    return status ? STATUS_VINCULO_LABEL[status] : 'Autônomo';
+  }
+
+  /**
+   * Abre seletor de arquivo e faz upload da foto.
+   */
+  async selecionarFoto(): Promise<void> {
+    if (this.uploadandoFoto()) return;
+
+    try {
+      const file = await this.imageUploadService.openFileSelector();
+      if (!file) return;
+
+      this.uploadandoFoto.set(true);
+
+      // Processar imagem (resize para 200x200)
+      const processed = await this.imageUploadService.processProfilePhoto(file);
+
+      // Atualiza o form com a foto em base64
+      this.form.patchValue({ fotoUrl: processed.base64 });
+      this.uploadandoFoto.set(false);
+
+      const toast = await this.toastController.create({
+        message: 'Foto carregada! Clique em Salvar para confirmar.',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+    } catch (error) {
+      this.uploadandoFoto.set(false);
+      const toast = await this.toastController.create({
+        message: 'Erro ao processar foto',
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
     }
+  }
 }

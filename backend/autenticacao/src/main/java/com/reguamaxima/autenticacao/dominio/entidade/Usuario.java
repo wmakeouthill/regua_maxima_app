@@ -76,6 +76,12 @@ public class Usuario implements UserDetails {
     @Column(name = "ultimo_login")
     private LocalDateTime ultimoLogin;
 
+    /**
+     * Foto de perfil em base64 (redimensionada para 200x200).
+     */
+    @Column(name = "foto_base64", columnDefinition = "TEXT")
+    private String fotoBase64;
+
     // ========== Métodos de Role ==========
 
     /**

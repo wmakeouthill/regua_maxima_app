@@ -15,9 +15,10 @@ import {
     cutOutline, statsChartOutline, cubeOutline, colorPaletteOutline,
     briefcaseOutline, locationOutline, heartOutline, timeOutline,
     documentTextOutline, walletOutline, linkOutline, swapHorizontalOutline,
-    chevronDownOutline
+    chevronDownOutline, cameraOutline
 } from 'ionicons/icons';
 import { AuthService, TipoUsuario, TIPOS_USUARIO } from '@core/auth/auth.service';
+import { ImageUploadService } from '../../core/services/image-upload.service';
 
 /**
  * Interface para item de menu do perfil
@@ -53,10 +54,12 @@ interface MenuItemPerfil {
 export class PerfilPage {
     readonly authService = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly imageUploadService = inject(ImageUploadService);
 
     notificacoesAtivas = true;
     mostrarActionSheet = signal(false);
     trocandoRole = signal(false);
+    uploadandoFoto = signal(false);
 
     // Computed para tipo de usuário
     readonly tipoUsuario = computed(() => this.authService.getTipoUsuario());
@@ -110,7 +113,8 @@ export class PerfilPage {
             case 'ADMIN':
                 return [
                     { id: 'barbearia', icone: 'storefront-outline', label: 'Minha Barbearia', rota: '/tabs/admin/barbearia', cor: 'secondary' },
-                    { id: 'equipe', icone: 'people-outline', label: 'Minha Equipe', rota: '/tabs/admin/barbeiros', badge: 1, cor: 'warning' },
+                    { id: 'meu-perfil-barbeiro', icone: 'briefcase-outline', label: 'Meu Perfil de Barbeiro', rota: '/tabs/admin/meu-perfil-barbeiro', cor: 'tertiary' },
+                    { id: 'equipe', icone: 'people-outline', label: 'Minha Equipe', rota: '/tabs/admin/barbeiros', cor: 'warning' },
                     { id: 'servicos', icone: 'cut-outline', label: 'Serviços', rota: '/tabs/admin/servicos', cor: 'tertiary' },
                     { id: 'relatorios', icone: 'stats-chart-outline', label: 'Relatórios', rota: '/tabs/admin/relatorios', cor: 'primary' },
                     { id: 'estoque', icone: 'cube-outline', label: 'Estoque', rota: '/tabs/admin/estoque', cor: 'success' },
@@ -151,7 +155,7 @@ export class PerfilPage {
             cutOutline, statsChartOutline, cubeOutline, colorPaletteOutline,
             briefcaseOutline, locationOutline, heartOutline, timeOutline,
             documentTextOutline, walletOutline, linkOutline, swapHorizontalOutline,
-            chevronDownOutline
+            chevronDownOutline, cameraOutline
         });
     }
 
@@ -212,5 +216,37 @@ export class PerfilPage {
     async logout(): Promise<void> {
         await this.authService.logout();
         this.router.navigate(['/login']);
+    }
+
+    /**
+     * Abre seletor de arquivo e faz upload da foto.
+     */
+    async selecionarFoto(): Promise<void> {
+        if (this.uploadandoFoto()) return;
+
+        try {
+            const file = await this.imageUploadService.openFileSelector();
+            if (!file) return;
+
+            this.uploadandoFoto.set(true);
+
+            // Processar imagem (resize para 200x200)
+            const processed = await this.imageUploadService.processProfilePhoto(file);
+
+            // Enviar para backend
+            this.authService.atualizarFoto(processed.base64).subscribe({
+                next: () => {
+                    this.uploadandoFoto.set(false);
+                    console.log('Foto atualizada com sucesso!');
+                },
+                error: (err) => {
+                    this.uploadandoFoto.set(false);
+                    console.error('Erro ao atualizar foto:', err);
+                }
+            });
+        } catch (error) {
+            this.uploadandoFoto.set(false);
+            console.error('Erro ao processar foto:', error);
+        }
     }
 }

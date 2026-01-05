@@ -257,6 +257,31 @@ public class AuthService {
         return gerarTokens(usuario);
     }
 
+    /**
+     * Atualiza foto de perfil do usuário.
+     */
+    @Transactional
+    public void atualizarFoto(Long usuarioId, String fotoBase64) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado"));
+
+        usuario.setFotoBase64(fotoBase64);
+        usuarioRepository.save(usuario);
+
+        log.info("Foto atualizada para usuário: {}", usuario.getEmail());
+    }
+
+    /**
+     * Busca dados do usuário.
+     */
+    @Transactional(readOnly = true)
+    public UsuarioDTO buscarUsuario(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado"));
+
+        return UsuarioDTO.fromEntity(usuario);
+    }
+
     // ========== Métodos Auxiliares ==========
 
     private AuthResponseDTO gerarTokens(Usuario usuario) {

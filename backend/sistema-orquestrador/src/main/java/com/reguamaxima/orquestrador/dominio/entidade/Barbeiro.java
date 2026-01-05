@@ -58,7 +58,7 @@ public class Barbeiro {
 
     // ========== Imagens ==========
 
-    @Column(name = "foto_url", length = 500)
+    @Column(name = "foto_url", columnDefinition = "TEXT")
     private String fotoUrl;
 
     /**

@@ -65,4 +65,21 @@ public class AuthController {
             @RequestBody TrocarRoleRequestDTO request) {
         return ResponseEntity.ok(authService.adicionarRole(userDetails.getId(), request.role()));
     }
+
+    @PutMapping("/foto")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Atualiza foto de perfil", description = "Salva foto de perfil em base64")
+    public ResponseEntity<Void> atualizarFoto(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody AtualizarFotoRequestDTO request) {
+        authService.atualizarFoto(userDetails.getId(), request.fotoBase64());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Dados do usuário logado", description = "Retorna dados do usuário autenticado")
+    public ResponseEntity<UsuarioDTO> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(authService.buscarUsuario(userDetails.getId()));
+    }
 }

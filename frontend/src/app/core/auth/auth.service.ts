@@ -23,6 +23,7 @@ export interface Usuario {
     nome: string;
     email: string;
     telefone?: string;
+    fotoBase64?: string;
     roles: string[];
     tipoUsuario: TipoUsuario;
     tipoUsuarioDescricao: string;
@@ -327,6 +328,26 @@ export class AuthService {
     hasRole(role: string): boolean {
         return this.getUserRoles().includes(role) ||
             this.getUserRoles().includes(`ROLE_${role}`);
+    }
+
+    /**
+     * Atualiza foto de perfil.
+     */
+    atualizarFoto(fotoBase64: string): Observable<void> {
+        return this.http.put<void>(
+            `${environment.apiUrl}/auth/foto`,
+            { fotoBase64 }
+        ).pipe(
+            tap(() => {
+                // Atualiza usuário local com nova foto
+                const user = this._currentUser();
+                if (user) {
+                    this._currentUser.set({ ...user, fotoBase64 });
+                    // Atualiza no storage
+                    Preferences.set({ key: 'user', value: JSON.stringify({ ...user, fotoBase64 }) });
+                }
+            })
+        );
     }
 
     /**
