@@ -133,7 +133,7 @@ export class PerfilPage {
             default:
                 return [
                     { id: 'editar', icone: 'person-outline', label: 'Editar Perfil', rota: '/tabs/cliente/editar-perfil', cor: 'primary' },
-                    { id: 'agendamentos', icone: 'calendar-outline', label: 'Meus Agendamentos', rota: '/tabs/cliente/agendamentos', badge: 2, cor: 'secondary' },
+                    { id: 'agendamentos', icone: 'calendar-outline', label: 'Meus Agendamentos', rota: '/tabs/cliente/agendamentos', cor: 'secondary' },
                     { id: 'favoritos', icone: 'heart-outline', label: 'Favoritos', rota: '/tabs/cliente/favoritos', cor: 'danger' },
                     { id: 'pagamento', icone: 'card-outline', label: 'Formas de Pagamento', rota: '/tabs/cliente/pagamentos', cor: 'success' },
                     { id: 'notificacoes', icone: 'notifications-outline', label: 'Notificações', rota: '/tabs/cliente/notificacoes', cor: 'warning' }
