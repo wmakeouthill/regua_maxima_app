@@ -52,6 +52,7 @@ export interface BarbeariaResumo {
     totalAvaliacoes: number;
     quantidadeBarbeiros?: number;
     distanciaKm?: number;
+    bairro?: string;
 }
 
 /**

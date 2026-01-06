@@ -116,7 +116,10 @@
 
                         <p class="endereco">
                             <ion-icon name="location-outline"></ion-icon>
-                            {{ barbearia.endereco }}@if(barbearia.cidade) {, {{ barbearia.cidade }}}
+                            {{ barbearia.endereco }}
+                            @if(barbearia.bairro) {, {{ barbearia.bairro }}}
+                            @if(barbearia.cidade) { - {{ barbearia.cidade }}}
+                            @if(barbearia.estado) {/{{ barbearia.estado }}}
                         </p>
 
                         <div class="barbearia-meta">

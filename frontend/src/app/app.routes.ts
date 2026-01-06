@@ -165,6 +165,18 @@ export const routes: Routes = [
                     {
                         path: 'minhas-avaliacoes',
                         loadComponent: () => import('./features/cliente/minhas-avaliacoes/minhas-avaliacoes.page').then(m => m.MinhasAvaliacoesPage)
+                    },
+                    {
+                        path: 'editar-perfil',
+                        loadComponent: () => import('./features/cliente/editar-perfil/editar-perfil.component').then(m => m.EditarPerfilComponent)
+                    },
+                    {
+                        path: 'pagamentos',
+                        loadComponent: () => import('./features/cliente/formas-pagamento/formas-pagamento.component').then(m => m.FormasPagamentoComponent)
+                    },
+                    {
+                        path: 'notificacoes',
+                        loadComponent: () => import('./features/cliente/notificacoes/notificacoes.component').then(m => m.NotificacoesComponent)
                     }
                 ]
             },

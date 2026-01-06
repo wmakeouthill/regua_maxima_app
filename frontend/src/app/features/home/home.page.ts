@@ -2,14 +2,15 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import {
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-    IonCardTitle, IonCardContent, IonCardSubtitle,
+    IonCardContent,
     IonIcon, IonButton, IonChip, IonGrid, IonRow, IonCol
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
     cutOutline, calendarOutline, timeOutline,
     starOutline, personOutline, locationOutline,
-    ribbonOutline, notificationsOutline
+    ribbonOutline, notificationsOutline, searchOutline,
+    heartOutline, sparklesOutline
 } from 'ionicons/icons';
 import { AuthService } from '@core/auth/auth.service';
 
@@ -25,7 +26,7 @@ import { AuthService } from '@core/auth/auth.service';
     standalone: true,
     imports: [
         IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-        IonCardTitle, IonCardContent, IonCardSubtitle,
+        IonCardContent,
         IonIcon, IonButton, IonChip, IonGrid, IonRow, IonCol
     ],
     templateUrl: './home.page.html',
@@ -46,7 +47,8 @@ export class HomePage implements OnInit {
         addIcons({
             cutOutline, calendarOutline, timeOutline,
             starOutline, personOutline, locationOutline,
-            ribbonOutline, notificationsOutline
+            ribbonOutline, notificationsOutline, searchOutline,
+            heartOutline, sparklesOutline
         });
     }
 
@@ -58,7 +60,8 @@ export class HomePage implements OnInit {
         } else if (tipo === 'BARBEIRO') {
             this.router.navigate(['/tabs/barbeiro/fila'], { replaceUrl: true });
         } else if (tipo === 'CLIENTE') {
-            this.router.navigate(['/tabs/cliente/explorar'], { replaceUrl: true });
+            // Cliente permanece na home
+            // this.router.navigate(['/tabs/cliente/explorar'], { replaceUrl: true });
         }
     }
 
@@ -69,5 +72,9 @@ export class HomePage implements OnInit {
 
     getTipoUsuarioLabel(): string {
         return this.authService.currentUser()?.tipoUsuarioDescricao ?? 'Usuário';
+    }
+
+    navegarPara(rota: string) {
+        this.router.navigate([rota]);
     }
 }

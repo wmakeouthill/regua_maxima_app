@@ -24,10 +24,13 @@
                         "polyfills": [],
                         "tsConfig": "tsconfig.app.json",
                         "inlineStyleLanguage": "scss",
-                        "externalDependencies": ["@stencil/core"],
+                        "externalDependencies": [
+                            "@stencil/core"
+                        ],
                         "assets": [
                             "src/favicon.ico",
-                            "src/assets"
+                            "src/assets",
+                            "src/manifest.webmanifest"
                         ],
                         "styles": [
                             "src/global.scss",

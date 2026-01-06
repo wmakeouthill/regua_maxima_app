@@ -20,6 +20,8 @@ import { BarbeariaService } from '@core/services/barbearia.service';
 import { FavoritoService } from '@core/services/favorito.service';
 import { BarbeariaResumo } from '@core/models/barbearia.model';
 import { MapaComponent, MapMarkerOptions } from '../../../shared/components/mapa/mapa.component';
+import { EnderecoAutocompleteComponent } from '../../../shared/components/endereco-autocomplete/endereco-autocomplete.component';
+import { ModalController } from '@ionic/angular/standalone';
 
 /**
  * Card de barbearia para exibição na lista.
@@ -299,8 +301,28 @@ export class ExplorarBarbeariasPage implements OnInit {
     /**
      * Permite alterar localização manualmente.
      */
+    private readonly modalController = inject(ModalController);
+
+    /**
+     * Permite alterar localização manualmente.
+     */
     async alterarLocalizacao(): Promise<void> {
-        // TODO: Implementar modal de seleção de cidade/endereço
-        console.log('Alterar localização - a implementar');
+        const modal = await this.modalController.create({
+            component: EnderecoAutocompleteComponent,
+            breakpoints: [0, 0.5, 0.8],
+            initialBreakpoint: 0.5
+        });
+
+        await modal.present();
+
+        const { data } = await modal.onWillDismiss();
+
+        if (data) {
+            this.latitudeAtual = data.lat;
+            this.longitudeAtual = data.lng;
+            this.localizacaoAtual.set(data.endereco);
+            this.erroLocalizacao.set(null);
+            this.carregarBarbearias();
+        }
     }
 }
