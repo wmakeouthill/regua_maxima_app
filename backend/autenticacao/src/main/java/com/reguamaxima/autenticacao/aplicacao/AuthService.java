@@ -282,6 +282,27 @@ public class AuthService {
         return UsuarioDTO.fromEntity(usuario);
     }
 
+    /**
+     * Atualiza perfil do usuário (apelido e telefone).
+     */
+    @Transactional
+    public UsuarioDTO atualizarPerfil(Long usuarioId, AtualizarPerfilRequestDTO request) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado"));
+
+        if (request.apelido() != null) {
+            usuario.setApelido(request.apelido().isBlank() ? null : request.apelido());
+        }
+        if (request.telefone() != null) {
+            usuario.setTelefone(request.telefone().isBlank() ? null : request.telefone());
+        }
+
+        usuarioRepository.save(usuario);
+        log.info("Perfil atualizado para usuário: {}", usuario.getEmail());
+
+        return UsuarioDTO.fromEntity(usuario);
+    }
+
     // ========== Métodos Auxiliares ==========
 
     private AuthResponseDTO gerarTokens(Usuario usuario) {

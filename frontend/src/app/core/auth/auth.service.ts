@@ -21,6 +21,7 @@ export interface AuthResponse {
 export interface Usuario {
     id: number;
     nome: string;
+    apelido?: string;
     email: string;
     telefone?: string;
     fotoBase64?: string;
@@ -346,6 +347,22 @@ export class AuthService {
                     // Atualiza no storage
                     Preferences.set({ key: 'user', value: JSON.stringify({ ...user, fotoBase64 }) });
                 }
+            })
+        );
+    }
+
+    /**
+     * Atualiza perfil do usuário (apelido, telefone).
+     */
+    atualizarPerfil(dados: { apelido?: string; telefone?: string }): Observable<Usuario> {
+        return this.http.put<Usuario>(
+            `${environment.apiUrl}/auth/perfil`,
+            dados
+        ).pipe(
+            tap((usuario) => {
+                // Atualiza usuário local
+                this._currentUser.set(usuario);
+                Preferences.set({ key: 'user', value: JSON.stringify(usuario) });
             })
         );
     }

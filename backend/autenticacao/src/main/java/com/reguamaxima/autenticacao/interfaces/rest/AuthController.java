@@ -82,4 +82,13 @@ public class AuthController {
     public ResponseEntity<UsuarioDTO> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(authService.buscarUsuario(userDetails.getId()));
     }
+
+    @PutMapping("/perfil")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Atualiza perfil", description = "Atualiza apelido e telefone do usuário")
+    public ResponseEntity<UsuarioDTO> atualizarPerfil(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody AtualizarPerfilRequestDTO request) {
+        return ResponseEntity.ok(authService.atualizarPerfil(userDetails.getId(), request));
+    }
 }

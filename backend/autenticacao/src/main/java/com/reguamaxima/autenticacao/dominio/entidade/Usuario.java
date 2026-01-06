@@ -82,6 +82,13 @@ public class Usuario implements UserDetails {
     @Column(name = "foto_base64", columnDefinition = "TEXT")
     private String fotoBase64;
 
+    /**
+     * Apelido/nickname do usuário (opcional).
+     * Usado na exibição no lugar do nome completo.
+     */
+    @Column(name = "apelido", length = 50)
+    private String apelido;
+
     // ========== Métodos de Role ==========
 
     /**

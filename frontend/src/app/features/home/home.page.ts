@@ -66,7 +66,12 @@ export class HomePage implements OnInit {
     }
 
     getPrimeiroNome(): string {
-        const nome = this.authService.currentUser()?.nome;
+        const user = this.authService.currentUser();
+        // Prioriza apelido, depois primeiro nome do nome completo
+        if (user?.apelido) {
+            return user.apelido;
+        }
+        const nome = user?.nome;
         return nome ? nome.split(' ')[0] : 'Cliente';
     }
 

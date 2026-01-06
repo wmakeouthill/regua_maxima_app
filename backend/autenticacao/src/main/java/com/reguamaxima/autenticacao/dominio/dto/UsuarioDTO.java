@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 public record UsuarioDTO(
         Long id,
         String nome,
+        String apelido,
         String email,
         String telefone,
         String fotoBase64,
@@ -42,6 +43,7 @@ public record UsuarioDTO(
         return new UsuarioDTO(
                 usuario.getId(),
                 usuario.getNome(),
+                usuario.getApelido(),
                 usuario.getEmail(),
                 usuario.getTelefone(),
                 usuario.getFotoBase64(),
