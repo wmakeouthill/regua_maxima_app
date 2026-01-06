@@ -53,6 +53,9 @@ export interface BarbeariaResumo {
     quantidadeBarbeiros?: number;
     distanciaKm?: number;
     bairro?: string;
+    // Status da sessão de trabalho (aberta/pausada/fechada)
+    aberta?: boolean;
+    statusSessao?: 'ABERTA' | 'PAUSADA' | 'FECHADA';
 }
 
 /**

@@ -97,8 +97,10 @@
                             <ion-icon name="storefront-outline"></ion-icon>
                         </div>
                         }
-                        @if (barbearia.ativo) {
+                        @if (barbearia.statusSessao === 'ABERTA') {
                         <ion-badge color="success" class="status-badge">Aberta</ion-badge>
+                        } @else if (barbearia.statusSessao === 'PAUSADA') {
+                        <ion-badge color="warning" class="status-badge">Pausada</ion-badge>
                         } @else {
                         <ion-badge color="medium" class="status-badge">Fechada</ion-badge>
                         }

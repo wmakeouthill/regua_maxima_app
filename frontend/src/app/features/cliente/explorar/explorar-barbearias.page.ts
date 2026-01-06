@@ -18,6 +18,7 @@ import {
 import { Geolocation } from '@capacitor/geolocation';
 import { BarbeariaService } from '@core/services/barbearia.service';
 import { FavoritoService } from '@core/services/favorito.service';
+import { SessaoTrabalhoService } from '@core/services/sessao-trabalho.service';
 import { BarbeariaResumo } from '@core/models/barbearia.model';
 import { MapaComponent, MapMarkerOptions } from '../../../shared/components/mapa/mapa.component';
 import { EnderecoAutocompleteComponent } from '../../../shared/components/endereco-autocomplete/endereco-autocomplete.component';
@@ -60,6 +61,7 @@ type TipoVisualizacao = 'lista' | 'mapa';
 export class ExplorarBarbeariasPage implements OnInit {
     private readonly barbeariaService = inject(BarbeariaService);
     private readonly favoritoService = inject(FavoritoService);
+    private readonly sessaoTrabalhoService = inject(SessaoTrabalhoService);
     private readonly router = inject(Router);
 
     // Estado
@@ -196,6 +198,9 @@ export class ExplorarBarbeariasPage implements OnInit {
 
                     this.barbearias.set(cards);
                     this.carregando.set(false);
+
+                    // Carrega status de cada barbearia
+                    this.carregarStatusBarbearias(cards);
                 },
                 error: (error) => {
                     console.error('Erro ao carregar barbearias:', error);
@@ -203,6 +208,34 @@ export class ExplorarBarbeariasPage implements OnInit {
                     this.carregando.set(false);
                 }
             });
+    }
+
+    /**
+     * Carrega status (aberta/pausada/fechada) de cada barbearia.
+     */
+    private carregarStatusBarbearias(cards: BarbeariaCard[]): void {
+        cards.forEach(card => {
+            this.sessaoTrabalhoService.verificarStatusBarbearia(card.id).subscribe({
+                next: (status) => {
+                    // Atualiza o status da barbearia no array
+                    const barbeariasAtuais = this.barbearias();
+                    const index = barbeariasAtuais.findIndex(b => b.id === card.id);
+                    if (index !== -1) {
+                        const novaLista = [...barbeariasAtuais];
+                        novaLista[index] = {
+                            ...novaLista[index],
+                            aberta: status.aberta,
+                            statusSessao: status.status
+                        };
+                        this.barbearias.set(novaLista);
+                    }
+                },
+                error: (err) => {
+                    // Se erro, assume fechada
+                    console.warn(`Erro ao buscar status da barbearia ${card.id}:`, err);
+                }
+            });
+        });
     }
 
     /**
