@@ -17,6 +17,10 @@ export interface GeoLocation {
     lat: number;
     lng: number;
     address?: string;
+    cidade?: string;
+    estado?: string;
+    bairro?: string;
+    cep?: string;
 }
 
 @Injectable({
@@ -165,17 +169,45 @@ export class GoogleMapsService {
         return this.isApiLoaded$.pipe(
             switchMap(() => {
                 return new Observable<GeoLocation>(observer => {
-                    // We need a map node or simple div to instantiate PlacesService?
-                    // Actually Geocoder can also handle placeId, which is cleaner if we just want loc.
-                    // Or strictly PlacesService. Let's use Geocoder for simplicity in fetching lat/lng from placeId.
                     const geocoder = new google.maps.Geocoder();
                     geocoder.geocode({ placeId }, (results, status) => {
                         if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
                             const location = results[0].geometry.location;
+                            const components = results[0].address_components;
+
+                            // Parse address components
+                            let cidade = '';
+                            let estado = '';
+                            let bairro = '';
+                            let cep = '';
+
+                            for (const comp of components) {
+                                if (comp.types.includes('administrative_area_level_2')) {
+                                    cidade = comp.long_name;
+                                }
+                                if (comp.types.includes('administrative_area_level_1')) {
+                                    estado = comp.short_name; // UF como SP, RJ
+                                }
+                                if (comp.types.includes('sublocality_level_1') || comp.types.includes('sublocality')) {
+                                    bairro = comp.long_name;
+                                }
+                                if (comp.types.includes('postal_code')) {
+                                    cep = comp.long_name;
+                                }
+                                // Fallback for cidade in locality
+                                if (comp.types.includes('locality') && !cidade) {
+                                    cidade = comp.long_name;
+                                }
+                            }
+
                             observer.next({
                                 lat: location.lat(),
                                 lng: location.lng(),
-                                address: results[0].formatted_address
+                                address: results[0].formatted_address,
+                                cidade,
+                                estado,
+                                bairro,
+                                cep
                             });
                             observer.complete();
                         } else {

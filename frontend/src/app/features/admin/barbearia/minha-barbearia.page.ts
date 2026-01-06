@@ -141,10 +141,10 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
                       formControlName="estado"
                       label="UF"
                       labelPlacement="floating"
-                      interface="popover"
+                      interface="action-sheet"
                     >
-                      @for (uf of estados; track uf) {
-                        <ion-select-option [value]="uf">{{ uf }}</ion-select-option>
+                      @for (uf of estados; track uf.sigla) {
+                        <ion-select-option [value]="uf.sigla">{{ uf.sigla }}</ion-select-option>
                       }
                     </ion-select>
                   </ion-item>
@@ -310,7 +310,8 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
     }
 
     .flex-item-small {
-      width: 80px;
+      width: 100px;
+      min-width: 100px;
     }
     
     .map-preview {
@@ -415,8 +416,11 @@ export class MinhaBarbeariaPage implements OnInit {
 
   onEnderecoSelecionado(loc: GeoLocation) {
     this.form.patchValue({
-      endereco: loc.address, // O endereço completo ou parte dele
-      // Idealmente parsearíamos os componentes do endereço se necessário
+      endereco: loc.address,
+      cidade: loc.cidade || '',
+      estado: loc.estado || '',
+      bairro: loc.bairro || '',
+      cep: loc.cep || '',
       latitude: loc.lat,
       longitude: loc.lng
     });
