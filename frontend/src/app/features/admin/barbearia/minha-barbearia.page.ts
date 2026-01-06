@@ -11,7 +11,8 @@ import {
 import { addIcons } from 'ionicons';
 import {
   businessOutline, locationOutline, callOutline, logoWhatsapp,
-  mailOutline, logoInstagram, saveOutline, trashOutline, checkmarkCircleOutline
+  mailOutline, logoInstagram, saveOutline, trashOutline, checkmarkCircleOutline,
+  imageOutline, cameraOutline, closeCircleOutline
 } from 'ionicons/icons';
 
 import { BarbeariaService } from '../../../core/services/barbearia.service';
@@ -86,6 +87,41 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
                   ></ion-textarea>
                 </ion-item>
               </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Foto da Barbearia -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="image-outline"></ion-icon>
+                Foto Principal
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="photo-upload-container">
+                @if (fotoPreview()) {
+                  <div class="photo-preview">
+                    <img [src]="fotoPreview()" alt="Foto da Barbearia" />
+                    <ion-button fill="clear" color="danger" class="remove-photo-btn" (click)="removerFoto()">
+                      <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </div>
+                } @else {
+                  <div class="photo-placeholder" (click)="fileInput.click()">
+                    <ion-icon name="camera-outline"></ion-icon>
+                    <p>Clique para adicionar foto</p>
+                  </div>
+                }
+                <input #fileInput type="file" accept="image/*" hidden (change)="onFotoSelecionada($event)" />
+                @if (fotoPreview()) {
+                  <ion-button fill="outline" expand="block" (click)="fileInput.click()" class="ion-margin-top">
+                    <ion-icon name="camera-outline" slot="start"></ion-icon>
+                    Alterar Foto
+                  </ion-button>
+                }
+              </div>
+              <p class="photo-hint"><small>Recomendado: imagem 800x600px ou maior</small></p>
             </ion-card-content>
           </ion-card>
 
@@ -324,6 +360,68 @@ import { GeoLocation } from '../../../core/services/google-maps.service';
     .text-medium {
        color: var(--ion-color-medium);
     }
+
+    .photo-upload-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .photo-preview {
+      position: relative;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+    }
+
+    .remove-photo-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+
+    .photo-placeholder {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      border: 2px dashed var(--ion-color-medium);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: var(--ion-color-primary);
+        background: var(--ion-color-primary-tint);
+      }
+
+      ion-icon {
+        font-size: 48px;
+        color: var(--ion-color-medium);
+      }
+
+      p {
+        margin: 8px 0 0 0;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .photo-hint {
+      text-align: center;
+      color: var(--ion-color-medium);
+      margin-top: 12px;
+    }
   `]
 })
 export class MinhaBarbeariaPage implements OnInit {
@@ -336,6 +434,7 @@ export class MinhaBarbeariaPage implements OnInit {
   salvando = signal(false);
   possuiBarbearia = signal(false);
   barbeariaId = signal<number | null>(null);
+  fotoPreview = signal<string | null>(null);
 
   estados = ESTADOS_BR;
 
@@ -357,13 +456,15 @@ export class MinhaBarbeariaPage implements OnInit {
     whatsapp: [''],
     emailContato: ['', [Validators.email]],
     instagram: [''],
+    fotoUrl: [''],
     ativo: [true]
   });
 
   constructor() {
     addIcons({
       businessOutline, locationOutline, callOutline, logoWhatsapp,
-      mailOutline, logoInstagram, saveOutline, trashOutline, checkmarkCircleOutline
+      mailOutline, logoInstagram, saveOutline, trashOutline, checkmarkCircleOutline,
+      imageOutline, cameraOutline, closeCircleOutline
     });
   }
 
@@ -406,8 +507,14 @@ export class MinhaBarbeariaPage implements OnInit {
       whatsapp: barbearia.whatsapp,
       emailContato: barbearia.emailContato,
       instagram: barbearia.instagram,
+      fotoUrl: barbearia.fotoUrl,
       ativo: barbearia.ativo
     });
+
+    // Carregar preview da foto existente
+    if (barbearia.fotoUrl) {
+      this.fotoPreview.set(barbearia.fotoUrl);
+    }
 
     if (barbearia.latitude && barbearia.longitude) {
       this.atualizarMapa({ lat: barbearia.latitude, lng: barbearia.longitude });
@@ -484,6 +591,82 @@ export class MinhaBarbeariaPage implements OnInit {
         }
       });
     }
+  }
+
+  /**
+   * Handler para seleção de foto via input file.
+   * Converte a imagem para base64 e atualiza preview e form.
+   */
+  onFotoSelecionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+
+    // Validar tamanho (máx 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      this.mostrarToast('Imagem muito grande. Máximo 2MB.', 'danger');
+      return;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      this.mostrarToast('Arquivo deve ser uma imagem.', 'danger');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const base64 = e.target?.result as string;
+
+      // Redimensionar se necessário (opcional, para economia)
+      this.resizeImage(base64, 800, 600).then(resizedBase64 => {
+        this.fotoPreview.set(resizedBase64);
+        this.form.patchValue({ fotoUrl: resizedBase64 });
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Remove a foto atual.
+   */
+  removerFoto(): void {
+    this.fotoPreview.set(null);
+    this.form.patchValue({ fotoUrl: '' });
+  }
+
+  /**
+   * Redimensiona imagem mantendo proporção.
+   */
+  private resizeImage(base64: string, maxWidth: number, maxHeight: number): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Calcular nova dimensão mantendo proporção
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = base64;
+    });
   }
 
   async mostrarToast(mensagem: string, cor: 'success' | 'danger') {

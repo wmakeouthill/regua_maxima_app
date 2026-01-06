@@ -1,0 +1,62 @@
+databaseChangeLog:
+  # ========================================================
+  # Migration: Adicionar campos de imagens na tabela barbearias
+  # Versão: 1.0.0
+  # Data: 2026-01-06
+  # Autor: Sistema
+  # Descrição: Campos para foto, banner e logo da barbearia
+  # ========================================================
+
+  - changeSet:
+      id: 015a-adicionar-foto-url-barbearias
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: barbearias
+              columnName: foto_url
+      comment: "Adiciona campo foto_url para foto principal da barbearia"
+      changes:
+        - addColumn:
+            tableName: barbearias
+            columns:
+              - column:
+                  name: foto_url
+                  type: TEXT
+
+  - changeSet:
+      id: 015b-adicionar-banner-url-barbearias
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: barbearias
+              columnName: banner_url
+      comment: "Adiciona campo banner_url para banner da barbearia"
+      changes:
+        - addColumn:
+            tableName: barbearias
+            columns:
+              - column:
+                  name: banner_url
+                  type: VARCHAR(500)
+
+  - changeSet:
+      id: 015c-adicionar-logo-url-barbearias
+      author: sistema
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: barbearias
+              columnName: logo_url
+      comment: "Adiciona campo logo_url para logo da barbearia"
+      changes:
+        - addColumn:
+            tableName: barbearias
+            columns:
+              - column:
+                  name: logo_url
+                  type: VARCHAR(500)

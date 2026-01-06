@@ -61,3 +61,7 @@ databaseChangeLog:
   - include:
       file: db/migrations/v1.0.0/014_adicionar_apelido_usuarios.yaml
       relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/015_adicionar_imagens_barbearias.yaml
+      relativeToChangelogFile: false
