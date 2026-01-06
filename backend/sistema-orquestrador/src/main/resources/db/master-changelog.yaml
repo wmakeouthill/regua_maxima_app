@@ -57,3 +57,7 @@ databaseChangeLog:
   - include:
       file: db/migrations/v1.0.0/013_alterar_foto_url_barbeiros.yaml
       relativeToChangelogFile: false
+
+  - include:
+      file: db/migrations/v1.0.0/014_adicionar_apelido_usuarios.yaml
+      relativeToChangelogFile: false
